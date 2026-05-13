@@ -1,6 +1,6 @@
 {
   "name": "emdash",
-  "version": "0.9.0",
+  "version": "0.12.0",
   "description": "Astro-native CMS with WordPress migration support",
   "type": "module",
   "main": "dist/index.mjs",
@@ -171,6 +171,7 @@
     "@emdash-cms/admin": "workspace:*",
     "@emdash-cms/auth": "workspace:*",
     "@emdash-cms/gutenberg-to-portable-text": "workspace:*",
+    "@emdash-cms/plugin-types": "workspace:*",
     "@floating-ui/react": "^0.27.16",
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@oslojs/crypto": "catalog:",
@@ -214,7 +215,7 @@
   },
   "peerDependencies": {
     "@astrojs/react": ">=5.0.0-beta.0",
-    "@emdash-cms/auth-atproto": "workspace:>=0.2.1",
+    "@emdash-cms/auth-atproto": "workspace:>=0.2.5",
     "astro": ">=6.0.0-beta.0",
     "react": ">=18.0.0",
     "react-dom": ">=18.0.0"
@@ -233,7 +234,7 @@
     "@types/pg": "^8.16.0",
     "@types/sanitize-html": "^2.16.0",
     "@types/sax": "^1.2.7",
-    "@vitest/ui": "^4.0.17",
+    "@vitest/ui": "^4.1.5",
     "publint": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",

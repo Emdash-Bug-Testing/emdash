@@ -164,6 +164,7 @@ import { PluginStateRepository } from "./plugins/state.js";
 import { requestCached } from "./request-cache.js";
 import { getRequestContext } from "./request-context.js";
 import { FTSManager } from "./search/fts-manager.js";
+import { invalidateSiteSettingsCache } from "./settings/index.js";
 
 /**
  * Map schema field types to editor field kinds
@@ -1287,6 +1288,8 @@ export class EmDashRuntime {
 						// or arbitrary `Record<string, unknown>` for plugin field widgets that
 						// need per-field config (e.g. a checkbox grid receiving its column defs).
 						options?: Array<{ value: string; label: string }> | Record<string, unknown>;
+						id?: string;
+						validation?: Record<string, unknown>;
 					}
 				> = {};
 
@@ -1296,6 +1299,9 @@ export class EmDashRuntime {
 						label: field.label,
 						required: field.required,
 					};
+					// Always include the field's database ID so the admin can forward it
+					// to upload/media-list API calls for MIME allowlist widening.
+					entry.id = field.id;
 					if (field.widget) entry.widget = field.widget;
 					// Plugin field widgets read their per-field config from `field.options`,
 					// which the seed schema types as `Record<string, unknown>`. Pass it
@@ -1312,8 +1318,12 @@ export class EmDashRuntime {
 						}));
 					}
 					// Include full validation for repeater fields (subFields, minItems, maxItems)
-					if (field.type === "repeater" && field.validation) {
-						(entry as Record<string, unknown>).validation = field.validation;
+					// and for file/image fields (allowedMimeTypes).
+					if (
+						(field.type === "repeater" || field.type === "file" || field.type === "image") &&
+						field.validation
+					) {
+						entry.validation = { ...field.validation };
 					}
 					fields[field.slug] = entry;
 				}
@@ -1980,7 +1990,11 @@ export class EmDashRuntime {
 	// Media Handlers
 	// =========================================================================
 
-	async handleMediaList(params: { cursor?: string; limit?: number; mimeType?: string }) {
+	async handleMediaList(params: {
+		cursor?: string;
+		limit?: number;
+		mimeType?: string | readonly string[];
+	}) {
 		return handleMediaList(this.db, params);
 	}
 
@@ -2042,11 +2056,29 @@ export class EmDashRuntime {
 		id: string,
 		input: { alt?: string; caption?: string; width?: number; height?: number },
 	) {
-		return handleMediaUpdate(this.db, id, input);
+		const result = await handleMediaUpdate(this.db, id, input);
+		// Resolved media references in site settings (`logo`, `favicon`,
+		// `seo.defaultOgImage`) bake in the media row's `contentType`,
+		// `width`, and `height`. A metadata edit invalidates that snapshot
+		// for every entry point: REST routes, MCP tools, plugin code, and
+		// any future caller of `handleMediaUpdate`. Cross-isolate staleness
+		// remains bounded by isolate lifetime.
+		if (result.success) {
+			invalidateSiteSettingsCache();
+		}
+		return result;
 	}
 
 	async handleMediaDelete(id: string) {
-		return handleMediaDelete(this.db, id);
+		const result = await handleMediaDelete(this.db, id);
+		// Same reasoning as `handleMediaUpdate`: if the deleted media row
+		// was referenced by a setting, the cached resolved URL now points
+		// at a 404. Invalidation is unconditional on success — cheaper than
+		// querying which settings reference the id.
+		if (result.success) {
+			invalidateSiteSettingsCache();
+		}
+		return result;
 	}
 
 	// =========================================================================
