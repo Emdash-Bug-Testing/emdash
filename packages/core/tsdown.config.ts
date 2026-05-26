@@ -109,6 +109,8 @@ export default defineConfig({
 		"src/page/index.ts",
 		// Plugin admin utilities (shared helpers for plugin admin.tsx files)
 		"src/plugin-utils.ts",
+		// `emdash/plugin` — type-only subpath for sandboxed plugin authors.
+		"src/plugin-types.ts",
 		// Standard plugin adapter (loaded by virtual:emdash/plugins at runtime)
 		"src/plugins/adapt-sandbox-entry.ts",
 		// Public source-exported subpaths -- compiled so consumers never
@@ -133,7 +135,7 @@ export default defineConfig({
 	inputOptions: (options) => {
 		// tsdown has already normalized the `entry` array into an input record
 		// by this hook; we only augment it with the route map.
-		// eslint-disable-next-line typescript-eslint(no-unsafe-type-assertion) -- normalized input record at the inputOptions hook
+		// eslint-disable-next-line typescript/no-unsafe-type-assertion -- normalized input record at the inputOptions hook
 		options.input = { ...(options.input as Record<string, string>), ...routeInputMap() };
 		return options;
 	},
