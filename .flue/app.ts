@@ -1,9 +1,10 @@
 // App-level wiring. Runs once at Worker boot.
 //
-// Registers the Cloudflare Workers AI binding with our AI Gateway so all
-// model calls (kimi, etc.) flow through gateway logging + cost tracking,
-// same surface bonk.yml and review.yml use. Without this, the binding
-// defaults to Cloudflare's on-demand gateway and we lose unified visibility.
+// Registers the Cloudflare Workers AI binding with our AI Gateway when
+// `CLOUDFLARE_GATEWAY_ID` is bound on the Worker -- the gateway option
+// is then forwarded on every `env.AI.run(...)` call, giving us request
+// logs + cache + cost tracking. If the binding is unset (e.g. local
+// dev with no gateway configured), calls hit Workers AI directly.
 
 import {
 	type CloudflareAIBinding,

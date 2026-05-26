@@ -64,8 +64,9 @@ export async function fetchAreaLabels(
 	const headers: Record<string, string> = {
 		Accept: "application/vnd.github+json",
 		"User-Agent": "emdash-flue-triage",
+		"X-GitHub-Api-Version": "2022-11-28",
 	};
-	if (token) headers.Authorization = `token ${token}`;
+	if (token) headers.Authorization = `Bearer ${token}`;
 
 	const all: { name: string }[] = [];
 	let page = 1;

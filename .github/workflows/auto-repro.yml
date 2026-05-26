@@ -84,9 +84,8 @@ jobs:
         run: pnpm build
 
       - name: Install Flue CLI
-        run: |
-          cd .flue
-          pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
+        working-directory: .flue
 
       - name: Ensure result labels exist
         env:
@@ -127,8 +126,13 @@ jobs:
             --arg t "$ISSUE_TITLE" \
             --arg b "$ISSUE_BODY" \
             '{issueNumber: $n, issueTitle: $t, issueBody: $b, owner: "emdash-cms", repo: "emdash"}')
-          cd .flue
-          pnpm exec flue run repro-issue \
+          # Run from the repo root so the local() sandbox's cwd matches
+          # the EmDash checkout. Skills resolve from <cwd>/.agents/skills/
+          # so the reproduce skill needs cwd = repo root, not .flue/.
+          # Same logic for `pnpm test` / `pnpm install` against fixtures.
+          # --root .flue tells Flue where to find the agent module.
+          pnpm --dir .flue exec flue run repro-issue \
             --target node \
+            --root .flue \
             --id "repro-${ISSUE_NUMBER}-$(date +%s)" \
             --payload "$PAYLOAD"

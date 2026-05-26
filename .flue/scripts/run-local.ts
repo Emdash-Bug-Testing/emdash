@@ -71,9 +71,12 @@ async function runOne(fixture: Fixture, apply: boolean): Promise<void> {
 	console.error(`\n=== issue #${fixture.number}: ${fixture.title}`);
 	const start = Date.now();
 
+	// Use `pnpm exec` (not `npx`) so we invoke the Flue version pinned in
+	// .flue/package.json/lockfile rather than whatever npx happens to
+	// resolve from the registry on the day.
 	const result = spawnSync(
-		"npx",
-		["flue", "run", "triage-issue", "--target", "node", "--id", id, "--payload", payload],
+		"pnpm",
+		["exec", "flue", "run", "triage-issue", "--target", "node", "--id", id, "--payload", payload],
 		{
 			cwd: FLUE_DIR,
 			env: process.env,
@@ -99,9 +102,17 @@ async function main() {
 		);
 		process.exit(2);
 	}
-	if (apply && !process.env.GITHUB_TOKEN && !process.env.GH_TOKEN) {
-		console.error("--apply requires GITHUB_TOKEN");
-		process.exit(2);
+	// Accept either GITHUB_TOKEN or GH_TOKEN from the user's shell, but
+	// normalise to GITHUB_TOKEN before spawning the child. The agent
+	// reads only process.env.GITHUB_TOKEN, so a user-set GH_TOKEN alone
+	// would otherwise pass this check and silently fail later.
+	if (apply) {
+		const token = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN;
+		if (!token) {
+			console.error("--apply requires GITHUB_TOKEN (or GH_TOKEN) in env");
+			process.exit(2);
+		}
+		process.env.GITHUB_TOKEN = token;
 	}
 	const missingGateway = [
 		"CLOUDFLARE_ACCOUNT_ID",

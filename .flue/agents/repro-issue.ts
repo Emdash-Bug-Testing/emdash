@@ -148,9 +148,20 @@ export default async function ({ init, payload, log }: FlueContext<ReproPayload>
 	// `local()` documents that it ignores host process.env unless
 	// explicitly passed, so leaving it out keeps the orchestrator token
 	// invisible to the agent's bash tool.
+	//
+	// cwd is pinned to the repo root explicitly. Flue's skill discovery
+	// reads <cwd>/.agents/skills/<name>/SKILL.md, and our reproduce skill
+	// lives at <repo-root>/.agents/skills/reproduce/SKILL.md (not under
+	// .flue/). The bash tool's `pnpm` / `git` / `gh` calls also need to
+	// land in the EmDash checkout root, not in .flue/. The workflow runs
+	// `pnpm --dir .flue exec flue run` from the repo root so process.cwd()
+	// is already correct -- this assignment is defence in depth.
+	const reproCwd = process.env.GITHUB_WORKSPACE ?? process.cwd();
 	const reproHarness = await init({
 		name: "repro",
+		cwd: reproCwd,
 		sandbox: local({
+			cwd: reproCwd,
 			env: {
 				GH_TOKEN: agentToken,
 				// Common pnpm/node env so the runner behaves as expected.
@@ -230,9 +241,13 @@ function renderReproComment(triage: TriageResult, repro: ReproResult): string {
 	lines.push(fence);
 	lines.push(repro.notes);
 	lines.push(fence);
-	if (repro.suggestedNextStep.trim().length > 0) {
+	// Collapse newlines into spaces -- same reason as the summary in
+	// triage-label.ts. Multi-line input would leak text outside the `> `
+	// blockquote prefix.
+	const nextStep = repro.suggestedNextStep.replace(NEWLINE_RUN_RE, " ").trim();
+	if (nextStep.length > 0) {
 		lines.push("");
-		lines.push(`> ${repro.suggestedNextStep}`);
+		lines.push(`> ${nextStep}`);
 	}
 	lines.push("");
 	lines.push(`_Classifier context: severity=\`${triage.severity}\`, kind=\`${triage.kind}\`._`);
@@ -240,6 +255,7 @@ function renderReproComment(triage: TriageResult, repro: ReproResult): string {
 }
 
 const BACKTICK_RUN_RE = /`+/g;
+const NEWLINE_RUN_RE = /\s*[\r\n]+\s*/g;
 
 /**
  * Return a backtick fence that is guaranteed to not appear inside `body`,

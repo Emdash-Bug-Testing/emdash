@@ -2,8 +2,8 @@
 //
 // No HTTP, no webhook, no HMAC. Invoked by:
 //   - The local prototype runner (scripts/run-local.ts) for skill iteration.
-//   - GitHub Actions in Phase 2, when a maintainer applies a `triage:run`
-//     label to an existing issue and we want a fresh classification.
+//   - The Phase 2 repro-issue agent (agents/repro-issue.ts), which calls
+//     classifyIssue() directly before running the reproduction skill.
 //   - The webhook agent (agents/triage-label.ts), which calls into the
 //     same `classifyIssue` core function after verifying the signature.
 //

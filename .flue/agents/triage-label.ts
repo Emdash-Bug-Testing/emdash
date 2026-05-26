@@ -287,9 +287,11 @@ export default async function ({ init, req, env, log }: FlueContext<unknown, Env
 	}
 
 	const agent = await init({
-		// The deployed Worker uses the Workers AI binding directly (no
-		// gateway hop) since we're already running on Cloudflare. The
-		// AI Gateway is for off-CF callers like the GH Actions runner.
+		// Uses the Workers AI binding (`env.AI`) wired up in app.ts. When
+		// `CLOUDFLARE_GATEWAY_ID` is set on the deployed Worker, app.ts
+		// forwards the gateway option on every `env.AI.run(...)` call.
+		// When it's unset, the binding hits Workers AI directly with no
+		// gateway logging/cache.
 		model: "cloudflare-workers-ai/@cf/moonshotai/kimi-k2.6",
 	});
 	const session = await agent.session();

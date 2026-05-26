@@ -1,6 +1,6 @@
 # Flue triage experiment
 
-**Status:** prototype, not deployed. See the EmDash Discussion for design context (TBD link).
+**Status:** prototype, not deployed. See [PR #1090](https://github.com/emdash-cms/emdash/pull/1090) for design context and review history.
 
 This directory contains an experimental Flue-based triage system with two phases:
 
@@ -33,7 +33,7 @@ export CLOUDFLARE_GATEWAY_ID=<gateway slug>
 export CLOUDFLARE_API_TOKEN=<gateway-scoped token>
 
 cd .flue
-pnpm install --ignore-workspace
+pnpm install
 
 # Test against a saved fixture (under .flue/fixtures/)
 pnpm prototype 1021
