@@ -82,35 +82,48 @@ jobs:
           RETRY_CONTEXT: ${{ inputs.retryContext }}
         run: |
           set -euo pipefail
+          # The issue body and retry context are attacker-controllable
+          # multiline strings. Writing them to $GITHUB_OUTPUT with a
+          # fixed heredoc delimiter is a step-output injection vector:
+          # a body containing the delimiter would terminate the heredoc
+          # and let the attacker forge subsequent outputs. Avoid
+          # putting them in step outputs at all -- write to /tmp files
+          # that later steps read directly.
           if [[ "$EVENT_NAME" == "workflow_dispatch" ]]; then
             NUM="$DISPATCH_ISSUE_NUMBER"
             gh api "/repos/emdash-cms/emdash/issues/${NUM}" > /tmp/issue.json
-            TITLE="$(jq -r '.title // ""' /tmp/issue.json)"
-            REPORTER="$(jq -r '.user.login // ""' /tmp/issue.json)"
-            # body via heredoc -- can contain newlines
-            {
-              echo "number=${NUM}"
-              echo "title=${TITLE}"
-              echo "reporter=${REPORTER}"
-              echo 'body<<ISSUE_BODY_EOF'
-              jq -r '.body // ""' /tmp/issue.json
-              echo ISSUE_BODY_EOF
-              echo 'retry_context<<RETRY_CTX_EOF'
-              printf '%s\n' "$RETRY_CONTEXT"
-              echo RETRY_CTX_EOF
-            } >> "$GITHUB_OUTPUT"
+            TITLE="$(jq -r '.title // ""' /tmp/issue.json | tr -d '\r\n')"
+            REPORTER="$(jq -r '.user.login // ""' /tmp/issue.json | tr -d '\r\n')"
+            jq -r '.body // ""' /tmp/issue.json > /tmp/ctx-body.txt
+            printf '%s' "$RETRY_CONTEXT" > /tmp/ctx-retry.txt
           else
-            {
-              echo "number=${LABEL_ISSUE_NUMBER}"
-              echo "title=${LABEL_ISSUE_TITLE}"
-              echo "reporter=${LABEL_ISSUE_REPORTER}"
-              echo 'body<<ISSUE_BODY_EOF'
-              printf '%s\n' "$LABEL_ISSUE_BODY"
-              echo ISSUE_BODY_EOF
-              echo 'retry_context<<RETRY_CTX_EOF'
-              echo RETRY_CTX_EOF
-            } >> "$GITHUB_OUTPUT"
+            NUM="$LABEL_ISSUE_NUMBER"
+            TITLE="$(printf '%s' "$LABEL_ISSUE_TITLE" | tr -d '\r\n')"
+            REPORTER="$(printf '%s' "$LABEL_ISSUE_REPORTER" | tr -d '\r\n')"
+            printf '%s' "$LABEL_ISSUE_BODY" > /tmp/ctx-body.txt
+            : > /tmp/ctx-retry.txt
           fi
+          # Validate scalar fields are simple before they hit step
+          # outputs. Issue numbers are integers; logins match a tight
+          # regex. Anything weird produces a hard fail rather than a
+          # silent injection.
+          if ! [[ "$NUM" =~ ^[0-9]+$ ]]; then
+            echo "::error::invalid issue number: $NUM"
+            exit 1
+          fi
+          if ! [[ "$REPORTER" =~ ^[a-zA-Z0-9-]{0,39}$ ]]; then
+            echo "::error::invalid reporter login: $REPORTER"
+            exit 1
+          fi
+          # Titles can include arbitrary unicode; cap length and strip
+          # control characters. They are never executed, but they do
+          # get echoed into markdown comments.
+          TITLE_CLEAN="$(printf '%s' "$TITLE" | LC_ALL=C tr -d '\000-\037\177' | cut -c1-256)"
+          {
+            echo "number=${NUM}"
+            echo "title=${TITLE_CLEAN}"
+            echo "reporter=${REPORTER}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Ensure bot labels exist
         continue-on-error: true
@@ -178,18 +191,23 @@ jobs:
         env:
           ISSUE_NUMBER: ${{ steps.ctx.outputs.number }}
           ISSUE_TITLE: ${{ steps.ctx.outputs.title }}
-          ISSUE_BODY: ${{ steps.ctx.outputs.body }}
-          RETRY_CONTEXT: ${{ steps.ctx.outputs.retry_context }}
         run: |
           set -euo pipefail
+          # Body and retry context come from /tmp files written by the
+          # ctx step, not $GITHUB_OUTPUT -- $GITHUB_OUTPUT with a fixed
+          # heredoc delimiter is a step-output injection vector when
+          # the content is attacker-controlled (issue body, retry text).
+          # jq --rawfile reads the file directly, so we never have to
+          # quote or escape the content in shell.
           PAYLOAD="$(jq -nc \
             --argjson n "$ISSUE_NUMBER" \
             --arg t "$ISSUE_TITLE" \
-            --arg b "$ISSUE_BODY" \
-            --arg r "$RETRY_CONTEXT" \
+            --rawfile b /tmp/ctx-body.txt \
+            --rawfile r /tmp/ctx-retry.txt \
             '{issueNumber: $n, issueTitle: $t, issueBody: $b, owner: "emdash-cms", repo: "emdash"} + (if $r == "" then {} else {retryContext: $r} end)')"
-          # Write to file rather than $GITHUB_OUTPUT to avoid the 1MB output cap
-          # on large issue bodies and to keep raw JSON out of step logs.
+          # Write payload to file rather than $GITHUB_OUTPUT to avoid the
+          # 1MB output cap on large issue bodies and to keep raw JSON out
+          # of step logs.
           printf '%s' "$PAYLOAD" > /tmp/agent-payload.json
           echo "path=/tmp/agent-payload.json" >> "$GITHUB_OUTPUT"
 
@@ -210,18 +228,21 @@ jobs:
         run: |
           set -o pipefail
           PAYLOAD="$(cat /tmp/agent-payload.json)"
-          RUN_ID="investigate-${ISSUE_NUMBER}-$(date +%s)"
           set +e
+          # `flue run` writes structured log events and the workflow
+          # result to stdout. Send stderr to a separate file so we can
+          # surface Flue's progress in the workflow log without
+          # contaminating the JSON we parse.
           pnpm --dir .flue exec flue run investigate \
             --target node \
             --root .flue \
-            --id "$RUN_ID" \
             --payload "$PAYLOAD" \
-            > /tmp/agent-stdout.json
+            > /tmp/agent-stdout.json 2> /tmp/agent-stderr.log
           EXIT=$?
           set -e
           echo "exit=$EXIT" >> "$GITHUB_OUTPUT"
-          # Surface a short preview to the log without dumping potentially huge output.
+          echo "--- agent stderr (last 200 lines) ---"
+          tail -n 200 /tmp/agent-stderr.log || true
           echo "--- agent stdout (first 200 lines) ---"
           head -n 200 /tmp/agent-stdout.json || true
           echo "--- end preview ---"
@@ -237,10 +258,24 @@ jobs:
             echo "outcome=failed" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          # Result is the last JSON object on stdout; some agents emit log
-          # lines first. Use `jq -s 'last'` over a stream filter so we get
-          # whichever object the agent finished with.
-          if ! RESULT="$(jq -cs 'map(select(type == "object")) | last // empty' < /tmp/agent-stdout.json)" || [[ -z "$RESULT" ]]; then
+          # Flue may interleave non-JSON log lines on stdout. Slurp-mode
+          # (`jq -s`) fails hard on any non-JSON content. Instead, scan
+          # the stream and keep only the last well-formed JSON object.
+          # Two strategies in order: prefer the last line that parses as
+          # a JSON object (`flue run` emits the workflow result as a
+          # single line), then fall back to the whole stream parse.
+          RESULT=""
+          while IFS= read -r line; do
+            if printf '%s' "$line" | jq -e 'type == "object"' >/dev/null 2>&1; then
+              RESULT="$line"
+            fi
+          done < /tmp/agent-stdout.json
+          if [[ -z "$RESULT" ]]; then
+            # Fallback: try slurp parse (handles pretty-printed multi-line JSON).
+            RESULT="$(jq -cs 'map(select(type == "object")) | last // empty' < /tmp/agent-stdout.json 2>/dev/null || true)"
+          fi
+          if [[ -z "$RESULT" ]] || [[ "$RESULT" == "null" ]]; then
+            echo "::warning::could not parse any JSON object from agent stdout"
             echo "outcome=failed" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -366,6 +401,17 @@ jobs:
           REPORTER: ${{ steps.ctx.outputs.reporter }}
         run: |
           set -euo pipefail
+          # Re-check issue state before any GitHub writes. The agent
+          # ran for up to 30 minutes; in that window the issue may
+          # have been closed (manually, or by bot-cleanup.yml on a
+          # different trigger). Pushing branches and commenting on a
+          # closed issue would be noise; bot-cleanup.yml would then
+          # leave a dangling branch the close trigger already missed.
+          ISSUE_STATE="$(gh api "/repos/emdash-cms/emdash/issues/${ISSUE_NUMBER}" --jq '.state')"
+          if [[ "$ISSUE_STATE" != "open" ]]; then
+            echo "::warning::issue #${ISSUE_NUMBER} is ${ISSUE_STATE}; skipping branch push and comment"
+            exit 0
+          fi
           NOTES="$(jq -r '.notes // ""' /tmp/agent-result.json)"
           COMMIT_MSG="$(jq -r '.commitMessage // ("fix: address #" + (.classification.summary // ""))' /tmp/agent-result.json)"
           FIX_BRANCH="bot/fix-${ISSUE_NUMBER}"
@@ -400,7 +446,13 @@ jobs:
           }
           git remote remove emdash-fix-origin 2>/dev/null || true
           git remote add emdash-fix-origin "$ORIGIN_URL"
-          git push --force-with-lease emdash-fix-origin "HEAD:refs/heads/${FIX_BRANCH}"
+          # Plain --force is intentional: every bot run regenerates the
+          # fix from scratch on top of current main. Prior bot commits
+          # on this branch are discarded. --force-with-lease without a
+          # tracked remote ref would not protect anything here (we
+          # never fetched bot/fix-N), and using it would falsely
+          # signal we're protecting against concurrent edits.
+          git push --force emdash-fix-origin "HEAD:refs/heads/${FIX_BRANCH}"
 
           # Push the artifact branch as an orphan with only the
           # screenshots. Uses a separate working tree so we don't
@@ -428,9 +480,15 @@ jobs:
           # already publishes preview releases on every push to this repo.
           INSTALL_CMD="npm i https://pkg.pr.new/emdash@${FIX_BRANCH##*/}"
 
-          gh issue edit "$ISSUE_NUMBER" --repo emdash-cms/emdash --remove-label "bot:reproducing" --add-label "bot:awaiting-reporter"
+          # ISO-8601 timestamp embedded in the comment as a hidden
+          # HTML marker. reporter-reply.yml uses this to verify that a
+          # negative or positive reply was posted AFTER this most-
+          # recent ask. Replies posted to an earlier ask (about a
+          # previous fix candidate) are ignored as stale.
+          ASK_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
           {
+            echo "<!-- bot-ask: ${ASK_AT} -->"
             echo "The investigation bot reproduced this issue and pushed a candidate fix."
             echo
             echo "${NOTES}"
@@ -457,7 +515,22 @@ jobs:
             echo
             echo "<sub>Run: $RUN_URL</sub>"
           } > /tmp/comment.md
-          gh issue comment "$ISSUE_NUMBER" --repo emdash-cms/emdash --body-file /tmp/comment.md
+
+          # Order matters: post the ask comment FIRST, transition the
+          # label only after the comment succeeds. If we flipped to
+          # `bot:awaiting-reporter` before posting and the comment
+          # then failed, reporter-reply.yml would see an issue in the
+          # awaiting state with no current `bot-ask` marker, treat
+          # every future reply as stale, and the issue would be stuck
+          # until a maintainer noticed.
+          if ! gh issue comment "$ISSUE_NUMBER" --repo emdash-cms/emdash --body-file /tmp/comment.md; then
+            echo "::warning::ask-comment post failed; transitioning to bot:failed instead of bot:awaiting-reporter"
+            gh issue edit "$ISSUE_NUMBER" --repo emdash-cms/emdash \
+              --remove-label "bot:reproducing" --add-label "bot:failed" || true
+            exit 1
+          fi
+          gh issue edit "$ISSUE_NUMBER" --repo emdash-cms/emdash \
+            --remove-label "bot:reproducing" --add-label "bot:awaiting-reporter"
 
       # ----- Outcome branches: agent failed / no parseable result -----
 

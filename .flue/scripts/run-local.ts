@@ -64,7 +64,6 @@ async function loadFixture(arg: string, live: boolean): Promise<Fixture> {
 }
 
 async function runOne(fixture: Fixture): Promise<void> {
-	const id = `local-${fixture.number}-${Date.now()}`;
 	const payload = JSON.stringify({
 		issueNumber: fixture.number,
 		issueTitle: fixture.title,
@@ -77,9 +76,10 @@ async function runOne(fixture: Fixture): Promise<void> {
 	const start = Date.now();
 
 	// `pnpm exec` (not `npx`) so we invoke the lockfile-pinned Flue.
+	// `flue run` in 0.8 generates the workflow run id itself; no --id flag.
 	const result = spawnSync(
 		"pnpm",
-		["exec", "flue", "run", "investigate", "--target", "node", "--id", id, "--payload", payload],
+		["exec", "flue", "run", "investigate", "--target", "node", "--payload", payload],
 		{
 			cwd: FLUE_DIR,
 			env: process.env,
