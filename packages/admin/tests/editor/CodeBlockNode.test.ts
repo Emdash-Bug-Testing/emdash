@@ -15,7 +15,11 @@ import { Editor } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 
-import { CodeBlockExtension } from "../../src/components/editor/CodeBlockNode";
+import {
+	CodeBlockExtension,
+	LANGUAGE_PICKER_POPUP_CLASS,
+	shouldDismissPicker,
+} from "../../src/components/editor/CodeBlockNode";
 
 describe("CodeBlockExtension", () => {
 	let editor: Editor;
@@ -73,5 +77,53 @@ describe("CodeBlockExtension", () => {
 		editor.commands.updateAttributes("codeBlock", { language: "typescript" });
 		const node = editor.getJSON().content?.find((n) => n.type === "codeBlock");
 		expect((node as { attrs?: { language?: string } }).attrs?.language).toBe("typescript");
+	});
+});
+
+describe("shouldDismissPicker", () => {
+	// The picker's outside-click handler uses this to decide whether a
+	// mousedown landed outside the picker. Regression for #1200: the
+	// Autocomplete suggestion list is portalled to document.body, so clicks
+	// on it must NOT be treated as "outside" or the picker tears down before
+	// the language selection commits.
+	let popover: HTMLElement;
+
+	beforeEach(() => {
+		popover = document.createElement("div");
+		document.body.appendChild(popover);
+	});
+
+	afterEach(() => {
+		popover.remove();
+		document.querySelectorAll(`.${LANGUAGE_PICKER_POPUP_CLASS}`).forEach((el) => el.remove());
+	});
+
+	it("does not dismiss when the target is inside the popover", () => {
+		const input = document.createElement("input");
+		popover.appendChild(input);
+		expect(shouldDismissPicker(input, popover)).toBe(false);
+	});
+
+	it("does not dismiss when the target is inside the portalled dropdown", () => {
+		// The dropdown lives at document.body, NOT inside popover.
+		const popup = document.createElement("div");
+		popup.className = LANGUAGE_PICKER_POPUP_CLASS;
+		const option = document.createElement("div");
+		option.setAttribute("role", "option");
+		popup.appendChild(option);
+		document.body.appendChild(popup);
+		expect(shouldDismissPicker(option, popover)).toBe(false);
+	});
+
+	it("dismisses when the target is genuinely outside the picker", () => {
+		const elsewhere = document.createElement("button");
+		document.body.appendChild(elsewhere);
+		expect(shouldDismissPicker(elsewhere, popover)).toBe(true);
+		elsewhere.remove();
+	});
+
+	it("does not dismiss when there is no popover or target", () => {
+		expect(shouldDismissPicker(null, popover)).toBe(false);
+		expect(shouldDismissPicker(document.createElement("div"), null)).toBe(false);
 	});
 });

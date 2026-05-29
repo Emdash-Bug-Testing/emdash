@@ -26,6 +26,35 @@ import { CODE_BLOCK_LANGUAGES, languageLabel, normalizeLanguage } from "./codeBl
 
 const LANGUAGE_ITEMS = CODE_BLOCK_LANGUAGES.map((l) => l.label);
 
+/**
+ * Marker class applied to the language dropdown's popup. The dropdown is
+ * rendered through Base UI's Portal, so its DOM lives at `document.body` --
+ * outside the picker's `popoverRef`. We use this class to recognise it as
+ * part of the picker in the outside-click handler.
+ */
+export const LANGUAGE_PICKER_POPUP_CLASS = "emdash-language-picker-popup";
+
+/**
+ * Decide whether a pointer event should dismiss the open language picker.
+ *
+ * Returns true only for events that land genuinely outside the picker. The
+ * subtlety (issue #1200): the Autocomplete suggestion list is portalled to
+ * `document.body`, so it is not a descendant of `popoverRef`. A naive
+ * "mousedown outside the popover closes it" check treats clicks on the
+ * dropdown -- including selecting a language -- as outside and tears the
+ * picker down before the selection commits, so it looks like the picker
+ * "loses focus and closes". Treat anything inside the portalled popup as
+ * part of the picker.
+ */
+export function shouldDismissPicker(target: Node | null, popover: HTMLElement | null): boolean {
+	if (!popover || !target) return false;
+	if (popover.contains(target)) return false;
+	if (target instanceof Element && target.closest(`.${LANGUAGE_PICKER_POPUP_CLASS}`)) {
+		return false;
+	}
+	return true;
+}
+
 function filterLanguages(item: string, query: string) {
 	if (!query) return true;
 	const needle = query.toLowerCase();
@@ -86,8 +115,13 @@ function CodeBlockNodeView({ node, updateAttributes, selected }: NodeViewProps) 
 	React.useEffect(() => {
 		if (!isEditing) return undefined;
 		const onMouseDown = (event: MouseEvent) => {
+			// Ignore synthetic events. Browser extensions (password managers,
+			// autofill) that inject into inputs dispatch untrusted pointer
+			// events; treating those as "the user clicked away" is what made
+			// the picker close mid-typing for some users (issue #1200).
+			if (!event.isTrusted) return;
 			const target = event.target instanceof Node ? event.target : null;
-			if (popoverRef.current && target && !popoverRef.current.contains(target)) {
+			if (shouldDismissPicker(target, popoverRef.current)) {
 				closePicker();
 			}
 		};
@@ -123,7 +157,7 @@ function CodeBlockNodeView({ node, updateAttributes, selected }: NodeViewProps) 
 							filter={filterLanguages}
 						>
 							<Autocomplete.InputGroup size="sm" placeholder={t`Language`} />
-							<Autocomplete.Content sideOffset={4}>
+							<Autocomplete.Content sideOffset={4} className={LANGUAGE_PICKER_POPUP_CLASS}>
 								<Autocomplete.List>
 									{(item: string) => (
 										<Autocomplete.Item key={item} value={item}>
