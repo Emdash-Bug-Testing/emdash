@@ -11,7 +11,7 @@
 
 const MAX_DEPTH = 16;
 
-export type CborValue = number | Uint8Array | string | CborValue[] | CborMap;
+export type CborValue = number | boolean | null | Uint8Array | string | CborValue[] | CborMap;
 export type CborMap = Map<number | string, CborValue>;
 
 export class CborError extends Error {
@@ -73,9 +73,32 @@ export class CborReader {
 				return this.readArray(this.readLength(info), depth);
 			case 5:
 				return this.readMap(this.readLength(info), depth);
+			case 7:
+				return this.readSimple(info);
 			default:
-				// 6 = tag, 7 = float/simple -- unsupported.
+				// 6 = tag -- unsupported.
 				throw new CborError(`unsupported CBOR major type ${major}`);
+		}
+	}
+
+	/**
+	 * Major type 7: only the boolean/null simple values that authenticator
+	 * extension outputs use (e.g. `hmac-secret`). Floats, custom simple values,
+	 * and the indefinite-length break are rejected. Extension contents are never
+	 * interpreted -- this exists so the extension block can be consumed and the
+	 * full-buffer assertion can hold.
+	 */
+	private readSimple(info: number): boolean | null {
+		switch (info) {
+			case 20:
+				return false;
+			case 21:
+				return true;
+			case 22:
+			case 23:
+				return null;
+			default:
+				throw new CborError(`unsupported CBOR simple value ${info}`);
 		}
 	}
 
@@ -92,8 +115,7 @@ export class CborReader {
 				return this.view.getUint32(this.take(4), false);
 			case 27: {
 				const high = this.view.getUint32(this.take(4), false);
-				const low = this.view.getUint32(this.offset, false);
-				this.offset += 4;
+				const low = this.view.getUint32(this.take(4), false);
 				if (high > 0x001f_ffff) {
 					// Would exceed Number.MAX_SAFE_INTEGER; no legitimate WebAuthn
 					// integer or length is this large.

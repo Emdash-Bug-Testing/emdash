@@ -52,7 +52,9 @@ function base64url(bytes: Uint8Array): string {
 	return Buffer.from(bytes).toString("base64url");
 }
 
-function createValidAssertion(opts: { rpId?: string; origin?: string } = {}) {
+function createValidAssertion(
+	opts: { rpId?: string; origin?: string; extensionData?: Buffer } = {},
+) {
 	const rpId = opts.rpId ?? config.rpId;
 	const origin = opts.origin ?? config.origins[0];
 	if (!origin) throw new Error("origin must be defined for createValidAssertion");
@@ -78,7 +80,13 @@ function createValidAssertion(opts: { rpId?: string; origin?: string } = {}) {
 	const rpIdHash = createHash("sha256").update(rpId).digest();
 	const signatureCounter = Buffer.alloc(4);
 	signatureCounter.writeUInt32BE(1);
-	const authenticatorData = Buffer.concat([rpIdHash, Buffer.from([0x01]), signatureCounter]);
+	const flags = Buffer.from([opts.extensionData ? 0x81 : 0x01]); // UP, plus ED when extensions present
+	const authenticatorData = Buffer.concat([
+		rpIdHash,
+		flags,
+		signatureCounter,
+		...(opts.extensionData ? [opts.extensionData] : []),
+	]);
 	const signatureMessage = assertionSignatureMessage(authenticatorData, clientDataJSON);
 	const signatureBytes = sign("sha256", signatureMessage, privateKey);
 
@@ -276,6 +284,25 @@ describe("authenticateWithPasskey", () => {
 		const { credential: rsaCredential, response, challengeStore } = createValidRS256Assertion();
 		const adapter = {
 			getCredentialById: vi.fn(async () => rsaCredential),
+			updateCredentialCounter: vi.fn(async () => undefined),
+			getUserById: vi.fn(async () => ({ id: "user_1" })),
+		} as unknown as AuthAdapter;
+
+		const user = await authenticateWithPasskey(config, adapter, response, challengeStore);
+		expect(user).toMatchObject({ id: "user_1" });
+	});
+
+	it("accepts an assertion whose authenticator data carries a boolean extension", async () => {
+		// ED flag set with {"hmac-secret": true} -- a CBOR boolean. The strict
+		// parser must consume it rather than reject the login.
+		const ext = Buffer.from([0xa1, 0x6b, ...Buffer.from("hmac-secret"), 0xf5]);
+		const {
+			credential: validCredential,
+			response,
+			challengeStore,
+		} = createValidAssertion({ extensionData: ext });
+		const adapter = {
+			getCredentialById: vi.fn(async () => validCredential),
 			updateCredentialCounter: vi.fn(async () => undefined),
 			getUserById: vi.fn(async () => ({ id: "user_1" })),
 		} as unknown as AuthAdapter;

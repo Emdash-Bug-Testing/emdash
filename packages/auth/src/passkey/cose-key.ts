@@ -27,6 +27,9 @@ const LABEL_RSA_N = -1;
 const LABEL_RSA_E = -2;
 
 const P256_COORDINATE_BYTES = 32;
+// Bound the attacker-supplied RSA modulus (attestation is 'none') so a malicious
+// authenticator can't register an oversized key that slows every later auth.
+const MAX_RSA_MODULUS_BYTES = 1024; // 8192-bit
 
 export class CoseKeyError extends Error {
 	constructor(message: string) {
@@ -42,7 +45,7 @@ export interface StoredPublicKey {
 
 function getInt(map: CborMap, label: number): number {
 	const value = map.get(label);
-	if (typeof value !== "number") {
+	if (typeof value !== "number" || !Number.isInteger(value)) {
 		throw new CoseKeyError(`COSE key label ${label} must be an integer`);
 	}
 	return value;
@@ -87,6 +90,12 @@ export function coseKeyToStored(map: CborMap): StoredPublicKey {
 		if (kty !== KTY_RSA) throw new CoseKeyError("RS256 requires an RSA key");
 		const n = getBytes(map, LABEL_RSA_N);
 		const e = getBytes(map, LABEL_RSA_E);
+		if (n.length === 0 || n.length > MAX_RSA_MODULUS_BYTES) {
+			throw new CoseKeyError("invalid RSA modulus length");
+		}
+		if (e.length === 0 || e.length > 8) {
+			throw new CoseKeyError("invalid RSA exponent length");
+		}
 		return { algorithm, publicKey: encodeRsaSpki(n, e) };
 	}
 
