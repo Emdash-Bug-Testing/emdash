@@ -16,6 +16,7 @@ import { getDb } from "../loader.js";
 import {
 	cachedQuery,
 	CacheNamespace,
+	contentNamespace,
 	invalidateTaxonomyObjectCache,
 } from "../object-cache/index.js";
 import { peekRequestCache, requestCached, setRequestCacheEntry } from "../request-cache.js";
@@ -191,8 +192,23 @@ export async function getTerm(
 	slug: string,
 	options: TaxonomyQueryOptions = {},
 ): Promise<TaxonomyTerm | null> {
-	const db = await getDb();
 	const chain = resolveLocaleChain(options.locale);
+	// Cached under the shared taxonomies epoch (bumped on any taxonomy / term
+	// assignment write). The `count` reflects content_taxonomies rows; a stale
+	// count after a bare content delete is bounded by the entry's TTL.
+	return cachedQuery({
+		namespace: CacheNamespace.TAXONOMIES,
+		key: `term:${taxonomyName}:${slug}:${chain.join(",")}`,
+		load: () => loadTerm(taxonomyName, slug, chain),
+	});
+}
+
+async function loadTerm(
+	taxonomyName: string,
+	slug: string,
+	chain: string[],
+): Promise<TaxonomyTerm | null> {
+	const db = await getDb();
 
 	let row: Awaited<ReturnType<ReturnType<typeof selectTerm>["executeTakeFirst"]>>;
 	const selectTerm = () =>
@@ -266,33 +282,46 @@ export function getEntryTerms(
 	options: TaxonomyQueryOptions = {},
 ): Promise<TaxonomyTerm[]> {
 	const locale = resolveLocale(options.locale);
+	// requestCached short-circuits to values primed by getAllTermsForEntries
+	// during entry hydration (same key shape). On a warm content-cache hit
+	// hydration doesn't run, so the inner cachedQuery serves this from KV
+	// instead of falling through to D1 on every request.
 	return requestCached(
 		`terms:${collection}:${entryId}:${taxonomyName ?? "*"}:${locale ?? "*"}`,
-		async () => {
-			const db = await getDb();
+		() =>
+			cachedQuery({
+				namespace: [contentNamespace(collection), CacheNamespace.TAXONOMIES],
+				key: `entryTerms:${collection}:${entryId}:${taxonomyName ?? "*"}:${locale ?? "*"}`,
+				load: async () => {
+					const db = await getDb();
 
-			let query = db
-				.selectFrom("content_taxonomies")
-				.innerJoin("taxonomies", "taxonomies.translation_group", "content_taxonomies.taxonomy_id")
-				.selectAll("taxonomies")
-				.where("content_taxonomies.collection", "=", collection)
-				.where("content_taxonomies.entry_id", "=", entryId);
+					let query = db
+						.selectFrom("content_taxonomies")
+						.innerJoin(
+							"taxonomies",
+							"taxonomies.translation_group",
+							"content_taxonomies.taxonomy_id",
+						)
+						.selectAll("taxonomies")
+						.where("content_taxonomies.collection", "=", collection)
+						.where("content_taxonomies.entry_id", "=", entryId);
 
-			if (taxonomyName) query = query.where("taxonomies.name", "=", taxonomyName);
-			if (locale !== undefined) query = query.where("taxonomies.locale", "=", locale);
+					if (taxonomyName) query = query.where("taxonomies.name", "=", taxonomyName);
+					if (locale !== undefined) query = query.where("taxonomies.locale", "=", locale);
 
-			const rows = await query.execute();
-			return rows.map<TaxonomyTerm>((row) => ({
-				id: row.id,
-				name: row.name,
-				slug: row.slug,
-				label: row.label,
-				parentId: row.parent_id ?? undefined,
-				children: [],
-				locale: row.locale,
-				translationGroup: row.translation_group,
-			}));
-		},
+					const rows = await query.execute();
+					return rows.map<TaxonomyTerm>((row) => ({
+						id: row.id,
+						name: row.name,
+						slug: row.slug,
+						label: row.label,
+						parentId: row.parent_id ?? undefined,
+						children: [],
+						locale: row.locale,
+						translationGroup: row.translation_group,
+					}));
+				},
+			}),
 	);
 }
 
@@ -305,57 +334,76 @@ export async function getTermsForEntries(
 	taxonomyName: string,
 	options: TaxonomyQueryOptions = {},
 ): Promise<Map<string, TaxonomyTerm[]>> {
-	const result = new Map<string, TaxonomyTerm[]>();
 	const uniqueIds = [...new Set(entryIds)];
-	for (const id of uniqueIds) result.set(id, []);
-	if (uniqueIds.length === 0) return result;
-
-	const db = await getDb();
+	if (uniqueIds.length === 0) return new Map();
 	const locale = resolveLocale(options.locale);
 
-	for (const chunk of chunks(uniqueIds, SQL_BATCH_SIZE)) {
-		let rows;
-		try {
-			let query = db
-				.selectFrom("content_taxonomies")
-				.innerJoin("taxonomies", "taxonomies.translation_group", "content_taxonomies.taxonomy_id")
-				.select([
-					"content_taxonomies.entry_id",
-					"taxonomies.id",
-					"taxonomies.name",
-					"taxonomies.slug",
-					"taxonomies.label",
-					"taxonomies.parent_id",
-					"taxonomies.locale",
-					"taxonomies.translation_group",
-				])
-				.where("content_taxonomies.collection", "=", collection)
-				.where("content_taxonomies.entry_id", "in", chunk)
-				.where("taxonomies.name", "=", taxonomyName);
-			if (locale !== undefined) query = query.where("taxonomies.locale", "=", locale);
-			rows = await query.execute();
-		} catch (error) {
-			if (isMissingTableError(error)) return result;
-			throw error;
+	// The query result is a Map, which JSON can't represent — cache it as an
+	// array of [entryId, terms] pairs and rebuild the Map on read.
+	const load = async (): Promise<Array<[string, TaxonomyTerm[]]>> => {
+		const result = new Map<string, TaxonomyTerm[]>();
+		for (const id of uniqueIds) result.set(id, []);
+
+		const db = await getDb();
+		for (const chunk of chunks(uniqueIds, SQL_BATCH_SIZE)) {
+			let rows;
+			try {
+				let query = db
+					.selectFrom("content_taxonomies")
+					.innerJoin("taxonomies", "taxonomies.translation_group", "content_taxonomies.taxonomy_id")
+					.select([
+						"content_taxonomies.entry_id",
+						"taxonomies.id",
+						"taxonomies.name",
+						"taxonomies.slug",
+						"taxonomies.label",
+						"taxonomies.parent_id",
+						"taxonomies.locale",
+						"taxonomies.translation_group",
+					])
+					.where("content_taxonomies.collection", "=", collection)
+					.where("content_taxonomies.entry_id", "in", chunk)
+					.where("taxonomies.name", "=", taxonomyName);
+				if (locale !== undefined) query = query.where("taxonomies.locale", "=", locale);
+				rows = await query.execute();
+			} catch (error) {
+				if (isMissingTableError(error)) return [...result.entries()];
+				throw error;
+			}
+
+			for (const row of rows) {
+				const term: TaxonomyTerm = {
+					id: row.id,
+					name: row.name,
+					slug: row.slug,
+					label: row.label,
+					parentId: row.parent_id ?? undefined,
+					children: [],
+					locale: row.locale,
+					translationGroup: row.translation_group,
+				};
+				const terms = result.get(row.entry_id);
+				if (terms) terms.push(term);
+			}
 		}
 
-		for (const row of rows) {
-			const term: TaxonomyTerm = {
-				id: row.id,
-				name: row.name,
-				slug: row.slug,
-				label: row.label,
-				parentId: row.parent_id ?? undefined,
-				children: [],
-				locale: row.locale,
-				translationGroup: row.translation_group,
-			};
-			const terms = result.get(row.entry_id);
-			if (terms) terms.push(term);
-		}
-	}
+		return [...result.entries()];
+	};
 
-	return result;
+	// Key on the sorted unique ids. Bound the key length: very large batches
+	// (rare; they come from collection hydration, already served by the content
+	// cache) bypass the object cache rather than blow past KV's key limit.
+	const idKey = uniqueIds.toSorted().join(",");
+	const pairs =
+		idKey.length <= 256
+			? await cachedQuery({
+					namespace: [contentNamespace(collection), CacheNamespace.TAXONOMIES],
+					key: `termsForEntries:${collection}:${taxonomyName}:${locale ?? "*"}:${idKey}`,
+					load,
+				})
+			: await load();
+
+	return new Map(pairs);
 }
 
 /**
