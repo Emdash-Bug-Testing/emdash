@@ -46,6 +46,7 @@ export type {
 // API handlers
 export {
 	handleContentList,
+	handleContentAuthors,
 	handleContentGet,
 	handleContentGetIncludingTrashed,
 	handleContentCreate,
@@ -96,6 +97,7 @@ export type {
 	PortableTextTextBlock,
 	PortableTextImageBlock,
 	PortableTextCodeBlock,
+	PortableTextHtmlBlock,
 	PortableTextUnknownBlock,
 	ProseMirrorMark,
 	ProseMirrorNode,
@@ -128,6 +130,8 @@ export type {
 	ResolvePathResult,
 	TranslationSummary,
 	TranslationsResult,
+	WhereRange,
+	WhereValue,
 } from "./query.js";
 
 // Request context (ALS-based ambient state for query functions)
@@ -198,6 +202,8 @@ export {
 	PluginManager,
 	createPluginManager,
 	PluginRouteError,
+	// Scheduler (Node timer heartbeat — used by virtual:emdash/scheduler)
+	NodeCronScheduler,
 	// Sandbox
 	NoopSandboxRunner,
 	SandboxNotAvailableError,
@@ -249,6 +255,10 @@ export type {
 	ModerationDecision,
 	CollectionCommentSettings,
 	StoredComment,
+
+	// Scheduler types
+	CronScheduler,
+	SystemCleanupFn,
 
 	// Sandbox runtime types
 	SandboxRunner,
@@ -403,7 +413,7 @@ export type {
 } from "./menus/types.js";
 
 // Bylines
-export { getByline, getBylineBySlug } from "./bylines/index.js";
+export { getByline, getBylineBySlug, getEntriesByByline } from "./bylines/index.js";
 export type { BylineSummary, ContentBylineCredit } from "./database/repositories/types.js";
 
 // Taxonomies

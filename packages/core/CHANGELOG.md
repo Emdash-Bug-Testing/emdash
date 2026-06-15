@@ -1,5 +1,239 @@
 # emdash
 
+## 0.19.0
+
+### Minor Changes
+
+- [#1442](https://github.com/emdash-cms/emdash/pull/1442) [`e96587f`](https://github.com/emdash-cms/emdash/commit/e96587f8ff393939355d3d643a322fe7b2c07c86) Thanks [@ascorbic](https://github.com/ascorbic)! - Add status, author, and date-range filtering to the admin content list ([#1288](https://github.com/emdash-cms/emdash/issues/1288)). The content list API gains `authorId`, `dateField`, `dateFrom`, and `dateTo` query params (all additive and optional), and a new `GET /_emdash/api/content/{collection}/authors` endpoint lists the distinct authors of a collection's content (gated on `content:read`). Filtering runs server-side, so it works across the whole collection rather than only the loaded page.
+
+- [#1439](https://github.com/emdash-cms/emdash/pull/1439) [`023893a`](https://github.com/emdash-cms/emdash/commit/023893a0fa966b95aad4ff533fc2966b3e3dfe03) Thanks [@ascorbic](https://github.com/ascorbic)! - Add content filtering by byline credit. `getEmDashCollection` now accepts a reserved `byline` key in `where` that returns entries credited to a byline in any position, including co-authored entries where the byline is a secondary credit. This makes author archive pages possible without querying the database directly. Pass a single byline translation group or an array to match any of several.
+
+  ```ts
+  const byline = await getBylineBySlug("jane-doe");
+  const { entries } = await getEmDashCollection("posts", {
+  	where: { byline: byline.translationGroup ?? byline.id },
+  	orderBy: { published_at: "desc" },
+  });
+  ```
+
+  A `getEntriesByByline(collection, byline, options)` helper wraps the same filter, mirroring `getEntriesByTerm`.
+
+- [#1367](https://github.com/emdash-cms/emdash/pull/1367) [`f41092b`](https://github.com/emdash-cms/emdash/commit/f41092bd847f1eb161034f1d2c67976e8473e794) Thanks [@MA2153](https://github.com/MA2153)! - Add content-reference database schema: `_emdash_relations` (relationship-type definitions, row-per-locale) and `_emdash_content_references` (directed, locale-agnostic edges between content entries linked by `translation_group`). Additive, forward-only migration `043`; no existing tables change. Groundwork for reference fields — no field type, API, or admin UI yet.
+
+- [#1438](https://github.com/emdash-cms/emdash/pull/1438) [`850c1b7`](https://github.com/emdash-cms/emdash/commit/850c1b7e23eb1b083c0fcb753762effa1d3a207a) Thanks [@ascorbic](https://github.com/ascorbic)! - Generate responsive `srcset`s for media rendered with the `Image` and Portable Text image components. EmDash now routes locally/R2-stored media through Astro's configured image service (`astro:assets`) -- the Cloudflare Images binding on Workers, sharp on Node -- producing width-appropriate candidates and modern formats (e.g. WebP) instead of a single full-size `<img>`.
+
+  This works automatically:
+  - Media served from a configured storage `publicUrl` (R2 custom domain, S3/CDN) is authorized and optimized.
+  - Same-origin proxied media (local storage, or R2 without a public URL) is optimized when `siteUrl` is set; the matching `image.remotePatterns` entry is registered for you, scoped to the media route.
+  - In `astro dev` it works out of the box without configuration.
+
+  When optimization isn't possible (no image service available, an unauthorized host, or unknown dimensions) the components fall back to a plain `<img>`, so existing sites keep rendering exactly as before. No template changes are required.
+
+- [#1312](https://github.com/emdash-cms/emdash/pull/1312) [`c39789c`](https://github.com/emdash-cms/emdash/commit/c39789c383e94125d8874a516988c7d9ca6f5484) Thanks [@ascorbic](https://github.com/ascorbic)! - Drive scheduled publishing from a real heartbeat instead of request side effects ([#1303](https://github.com/emdash-cms/emdash/issues/1303)).
+
+  Content scheduled via the admin now actually transitions to `published` when its time arrives. Previously nothing promoted the row — `status` stayed `scheduled` and `published_at` stayed null forever.
+
+  A new sweep (`publishDueContent`) promotes due content and runs alongside the existing cron tick and system cleanup:
+  - **Node / single-process:** the timer-based scheduler already drives it — no action needed.
+  - **Cloudflare Workers:** a `scheduled()` handler driven by a Cron Trigger now runs the sweep. The request-driven `PiggybackScheduler` is gone, so there are no maintenance side effects on visitor requests.
+
+  `@emdash-cms/cloudflare` ships a Worker entry that wraps Astro's handler with the `scheduled()` handler (`@emdash-cms/cloudflare/worker`, plus `createScheduledHandler()` for hand-assembled Workers). When a cache provider is configured, the handler also purges edge-cache tags for whatever it published, so stale snapshots produced before the scheduled time are evicted.
+
+  **Migration for existing Cloudflare sites.** New sites get this from the templates. Existing deployments must update two files:
+
+  ```ts
+  // src/worker.ts
+  export { default, PluginBridge } from "@emdash-cms/cloudflare/worker";
+  ```
+
+  ```jsonc
+  // wrangler.jsonc
+  "triggers": { "crons": ["* * * * *"] }
+  ```
+
+  Without the Cron Trigger, scheduled publishing and plugin cron do not run on Workers.
+
+  Scheduled publishing matches manual publishing exactly: it fires `content:afterPublish` hooks (search indexing, webhooks, syndication), and records the _scheduled_ time as `published_at` on first publication rather than the (later) sweep time. The sweep claims each row atomically before promoting it, so an entry unscheduled or rescheduled just before its time is never published, and overlapping sweeps can't double-publish. Local `astro dev` keeps running the timer-driven sweep even under the Cloudflare adapter (where production relies on the Cron Trigger).
+
+  Each tick promotes at most 100 items per collection (a large backlog drains over successive ticks) so a single Worker invocation can't exhaust its CPU/subrequest budget, and edge-cache tags are purged incrementally after each collection's batch rather than only at the end. On Node, the maintenance interval is capped at 60s so scheduled-publish latency matches the Cloudflare Cron Trigger cadence instead of lagging up to five minutes when no plugin cron is due.
+
+### Patch Changes
+
+- [#1307](https://github.com/emdash-cms/emdash/pull/1307) [`cedfcc5`](https://github.com/emdash-cms/emdash/commit/cedfcc527d47131baaa5dcfb29fb7b4a966265d5) Thanks [@emdashbot](https://github.com/apps/emdashbot)! - Read `?locale=` in content write routes (DELETE, publish, unpublish, discard-draft, schedule, unschedule) and forward it to `handleContentGet` for locale-aware slug resolution ([#1242](https://github.com/emdash-cms/emdash/issues/1242))
+
+- [#1420](https://github.com/emdash-cms/emdash/pull/1420) [`c63f9ca`](https://github.com/emdash-cms/emdash/commit/c63f9ca56a8fc0cf4e1843887291fee0d78d89a2) Thanks [@swissky](https://github.com/swissky)! - `getTaxonomyTerms()` now returns the term `description` for flat
+  (non-hierarchical) taxonomies ([#1419](https://github.com/emdash-cms/emdash/issues/1419))
+
+  The query already fetched the `data` column, but the non-hierarchical branch
+  dropped it when mapping rows to `TaxonomyTerm` — only hierarchical taxonomies
+  (via `buildTree`) parsed the description. Descriptions set in the admin UI are
+  now returned for both kinds of taxonomies.
+
+- [#1426](https://github.com/emdash-cms/emdash/pull/1426) [`61ea3c9`](https://github.com/emdash-cms/emdash/commit/61ea3c9fee5b0f11974895a278d8297c56abec0b) Thanks [@MA2153](https://github.com/MA2153)! - Fix seed CLI hardcoding `en` as the default locale ([#1421](https://github.com/emdash-cms/emdash/issues/1421))
+
+  `emdash export-seed` now emits a top-level `defaultLocale` for single-locale
+  projects, and `emdash seed` (`applySeed`) honors it when backfilling the locale
+  of menus, taxonomies, and content rows that omit an explicit `locale`. Previously
+  an `export-seed` → `seed` round-trip silently rewrote a non-`en` default locale
+  (e.g. `de`) to `en`, since the CLI runs outside the Astro runtime and the
+  fallback collapsed to `en`. Projects whose default locale is `en` are unaffected.
+
+- [#1445](https://github.com/emdash-cms/emdash/pull/1445) [`a4c2af2`](https://github.com/emdash-cms/emdash/commit/a4c2af20ee27fef891290a442f7a20d4db64600d) Thanks [@ascorbic](https://github.com/ascorbic)! - Fix `getEmDashEntry` / `getEmDashCollection` hydrating taxonomy terms in the request-context or default locale instead of the entry's resolved locale ([#1441](https://github.com/emdash-cms/emdash/issues/1441)). When querying with an explicit `locale` (or via a localized route), `entry.data.terms` could return default-locale term variants even though the content row was correctly localized. Term hydration now uses the same resolved locale as the content query.
+
+- Updated dependencies [[`e96587f`](https://github.com/emdash-cms/emdash/commit/e96587f8ff393939355d3d643a322fe7b2c07c86), [`cedfcc5`](https://github.com/emdash-cms/emdash/commit/cedfcc527d47131baaa5dcfb29fb7b4a966265d5), [`7e70abc`](https://github.com/emdash-cms/emdash/commit/7e70abcc1434dc2fd94c1f51c8c8c76acc9aa536), [`783e663`](https://github.com/emdash-cms/emdash/commit/783e66365d5800e01ab445cbb411237240ff2ab4), [`157237d`](https://github.com/emdash-cms/emdash/commit/157237d6b3db0301f059534c9390bdef0a02b0cf)]:
+  - @emdash-cms/admin@0.19.0
+  - @emdash-cms/auth@0.19.0
+  - @emdash-cms/gutenberg-to-portable-text@0.19.0
+
+## 0.18.0
+
+### Patch Changes
+
+- [#1391](https://github.com/emdash-cms/emdash/pull/1391) [`8a766b8`](https://github.com/emdash-cms/emdash/commit/8a766b876117bbb2b7a2179615e83666cdc769e8) Thanks [@mvvmm](https://github.com/mvvmm)! - Add `fetchpriority="high"` to priority EmDash images so above-the-fold images can be requested eagerly and prioritized by the browser.
+
+- [#1405](https://github.com/emdash-cms/emdash/pull/1405) [`bdabff7`](https://github.com/emdash-cms/emdash/commit/bdabff7e4b5fb699ef25002508b7edd3ed184061) Thanks [@ascorbic](https://github.com/ascorbic)! - Fixed a bug where a visitor disconnecting at the wrong moment during a cold start could leave that server instance permanently broken: every subsequent request to it would hang until the platform timed it out (a 524 error on Cloudflare, after 100 seconds), and the instance stayed broken until it was recycled. Sites no longer get stuck — startup now recovers automatically, and in the worst case a request fails fast with an error instead of hanging.
+
+- [#1408](https://github.com/emdash-cms/emdash/pull/1408) [`afc065c`](https://github.com/emdash-cms/emdash/commit/afc065c12e6b9a19c30d2cf179fd1ba9667c5b17) Thanks [@ascorbic](https://github.com/ascorbic)! - Faster cold starts. The first request a fresh server instance handles — after a deploy, or when traffic picks up again after a quiet spell — now runs its startup steps concurrently instead of one at a time, shaving database and storage round trips off that first page load. Especially noticeable on Cloudflare, where new instances spin up frequently.
+
+- [#1409](https://github.com/emdash-cms/emdash/pull/1409) [`7ee9467`](https://github.com/emdash-cms/emdash/commit/7ee94677193fb8dd39b87a23b69883f7055ab296) Thanks [@ascorbic](https://github.com/ascorbic)! - Pages render with fewer database round trips:
+  - Tag and category archive pages load faster — `getTerm()` fetches its details in parallel instead of one query at a time.
+  - Pages with several menus (header, footer, …) no longer repeat the same lookup for each menu.
+  - Entries fetched with `getEmDashEntry`/`getEmDashCollection` already include their taxonomy terms — you can now read `entry.data.terms?.tag` directly (it's typed in your generated `emdash-env.d.ts`) instead of making a separate `getEntryTerms()` call. The bundled templates have been updated to do this.
+
+- [#1407](https://github.com/emdash-cms/emdash/pull/1407) [`f9362d7`](https://github.com/emdash-cms/emdash/commit/f9362d7a89db14420a4a8f7af4e6568f15905ea7) Thanks [@ascorbic](https://github.com/ascorbic)! - Query instrumentation (`EMDASH_QUERY_LOG=1`) now captures the whole request, not just the part before the response headers are sent. Queries issued by components while the page is still streaming were previously invisible to the Server-Timing numbers; a final `[emdash-stream-end]` log line now reports the complete query count, database time, and cache hits for each request, so you can see where a slow page really spends its time. No effect when instrumentation is off.
+
+- Updated dependencies [[`d2829e3`](https://github.com/emdash-cms/emdash/commit/d2829e36c0e568db4ec92f500b166e03f0c36973)]:
+  - @emdash-cms/admin@0.18.0
+  - @emdash-cms/auth@0.18.0
+  - @emdash-cms/gutenberg-to-portable-text@0.18.0
+
+## 0.17.2
+
+### Patch Changes
+
+- [#1356](https://github.com/emdash-cms/emdash/pull/1356) [`4e11daa`](https://github.com/emdash-cms/emdash/commit/4e11daaaf7c07b20903527626391e31799675da8) Thanks [@ascorbic](https://github.com/ascorbic)! - Scope Postgres table/column introspection to the connection's active schema instead of hardcoding `public`. `tableExists` and `listTablesLike` (`database/dialect-helpers.ts`) and two idempotency checks in the `019_i18n` migration queried `information_schema` with `table_schema = 'public'`, so a Postgres deployment using a non-public schema (per-tenant or shared-cluster setups) would see tables from the wrong schema or none at all, causing collection/schema operations to misbehave and the i18n migration to skip its column additions. These now use `current_schema()`, matching the already-correct `indexExists`/`columnExists` helpers and migration `038`.
+
+- [#1167](https://github.com/emdash-cms/emdash/pull/1167) [`fe6bc78`](https://github.com/emdash-cms/emdash/commit/fe6bc78e74ecbc41bcae495e070eec9f25e23da2) Thanks [@abhishekshankar](https://github.com/abhishekshankar)! - fix(seo): buildMediaUrl handles root-relative paths without doubling the API prefix
+
+- [#1345](https://github.com/emdash-cms/emdash/pull/1345) [`80f2925`](https://github.com/emdash-cms/emdash/commit/80f2925bfbc5f4418363c499c36e0a1c1af04242) Thanks [@scottbuscemi](https://github.com/scottbuscemi)! - Fix frontend pages redirecting to `/_emdash/admin/setup` on a fully set-up site. The anonymous fast-path "setup probe" in the Astro middleware queries `_emdash_migrations` to detect a fresh, un-migrated database, but its `catch` block treated **every** error as "fresh install" — so a transient DB failure (D1 connection loss, replica unavailable, query timeout, cold-start race, locked SQLite) wrongly bounced real visitors to the setup wizard. The probe now only redirects when the error is a genuinely-missing table (via the shared `isMissingTableError` helper) and otherwise renders the page normally. The `setupVerified` flag is also moved onto a `globalThis` `Symbol.for` singleton so it isn't duplicated across SSR chunks, which had caused the probe to re-run far more often than intended (and each re-run was another chance to hit the bug).
+
+- Updated dependencies [[`4ee75f8`](https://github.com/emdash-cms/emdash/commit/4ee75f851da4461a599f892c820152377625ef70)]:
+  - @emdash-cms/admin@0.17.2
+  - @emdash-cms/auth@0.17.2
+  - @emdash-cms/gutenberg-to-portable-text@0.17.2
+
+## 0.17.1
+
+### Patch Changes
+
+- [#1328](https://github.com/emdash-cms/emdash/pull/1328) [`149fc49`](https://github.com/emdash-cms/emdash/commit/149fc4904326174075d100ccb4f203b2a250ec64) Thanks [@MA2153](https://github.com/MA2153)! - Fix `emdash export-seed` omitting bylines. The exporter now emits byline profiles as the root `bylines[]` array (one entry per translation group, since `SeedByline` has no locale axis) and, when content is exported, attaches each entry's ordered byline credits as `bylines[]` referencing those profiles. Credits are read straight from `_emdash_content_bylines` (whose `byline_id` already stores the translation group), so the exported seed round-trips back through `applySeed` with profiles and credits intact.
+
+- [#1336](https://github.com/emdash-cms/emdash/pull/1336) [`64d5675`](https://github.com/emdash-cms/emdash/commit/64d56759250016fb4bfb2a2ab83106407ffd61a7) Thanks [@ascorbic](https://github.com/ascorbic)! - Pre-bundle EmDash's auth, MCP, and admin-shell dependencies so `astro dev` on Cloudflare no longer triggers a re-optimize + full-reload cascade on the first authenticated/admin/MCP request.
+
+  These deps (`@oslojs/crypto/{hmac,subtle,rsa}`, `arctic`, the MCP server entrypoints, `@lingui/react`, `@cloudflare/kumo/primitives`, `astro/assets/services/noop`) are only imported on routes the initial Vite scan never reaches, so the workerd runtime discovered them one at a time. Each discovery invalidated the optimize cache mid-flight, producing `The file does not exist at ".../deps_ssr/chunk-*.js"` errors and repeated full reloads on cold start. Adding them to the Cloudflare SSR `optimizeDeps.include` list front-loads them into a single startup optimize pass.
+
+- [#1331](https://github.com/emdash-cms/emdash/pull/1331) [`77fff0a`](https://github.com/emdash-cms/emdash/commit/77fff0a36cd4d6dc242c1d8dd58934ca14cd6dbd) Thanks [@MA2153](https://github.com/MA2153)! - Fix `emdash export-seed` collapsing locale variants into duplicate seed ids on i18n projects. The CLI never initializes the runtime i18n config, so `isI18nEnabled()` was always `false` and the exporter stripped the `:locale` suffix from taxonomy, menu, and content seed ids — merging every locale variant into one bare id and producing duplicates that `validateSeed` rejected. The exporter now derives locale-awareness from the data (a project is multi-locale when its i18n-aware tables hold more than one distinct locale), so multi-locale exports keep their per-locale suffixes and `translationOf` links while genuinely single-locale projects still export bare ids.
+
+- [#1340](https://github.com/emdash-cms/emdash/pull/1340) [`87c40d3`](https://github.com/emdash-cms/emdash/commit/87c40d34b3a0130f67bf7d31caf40572f14135e6) Thanks [@emdashbot](https://github.com/apps/emdashbot)! - Fix `getEmDashCollection` pagination losing `nextCursor` with Astro 6 live collections. Astro's `getLiveCollection` repacks loader results and drops the `nextCursor` field before it reaches the caller. The wrapper now over-fetches by one entry whenever a `limit` is provided, slices the extra row locally, and synthesizes `nextCursor` via the existing `encodeEntryCursor` helper — matching the strategy already used by the bucketing path.
+
+- Updated dependencies [[`83daa41`](https://github.com/emdash-cms/emdash/commit/83daa4149ed0d1ccf23d9f90304ef6ba3545d46f), [`dfabafe`](https://github.com/emdash-cms/emdash/commit/dfabafeb5db9c27c861015e7d426eb40d6ed940a)]:
+  - @emdash-cms/admin@0.17.1
+  - @emdash-cms/auth@0.17.1
+  - @emdash-cms/gutenberg-to-portable-text@0.17.1
+
+## 0.17.0
+
+### Minor Changes
+
+- [#1258](https://github.com/emdash-cms/emdash/pull/1258) [`28432b9`](https://github.com/emdash-cms/emdash/commit/28432b9b5a045c9227d59f7762bf9cb37067a950) Thanks [@MohamedH1998](https://github.com/MohamedH1998)! - Adds custom fields to bylines. Sites can define site-specific byline metadata (Twitter handle, pronouns, company, localised job title, etc.) via the new `/byline-schema` admin screen, accessed from the **Byline schema** link button at the top of the Bylines admin page (admin-only).
+
+  Per-field `translatable` flag picks whether values are stored per-locale (one value per locale row in a `translation_group`) or shared across every locale variant of the same byline identity. Schema management is gated by `schema:manage`; value editing by `bylines:manage`.
+
+  Custom-field values can be set at both create and update time. `POST` and `PUT` on `/_emdash/api/admin/bylines` accept the same `customFields` map; the row write and the custom-field writes share a single transaction on Node/PG so a partial failure rolls both back. On D1 (no transactions), a retry POST is treated as completing an abandoned create iff three checks all pass: (a) every fixed column on the existing row matches the new payload (`displayName`, `bio`, `avatarMediaId`, `websiteUrl`, `userId`, `isGuest`, effective locale — null-vs-undefined normalised); (b) the existing row's `translationGroup` matches what a fresh create with the same input would produce (`sourceGroup` when `translationOf` is present, `existing.id` when it isn't); (c) every custom-field value already stored on the row appears in the input payload with an equal value (subset-match, so partial mid-loop crashes can be completed). The recovery branch is conservative on every axis: any fixed-column mismatch, any translation-group mismatch, any overlapping custom-field value mismatch, an input that omits a key the existing row stores, or an input with no custom fields at all → standard `CONFLICT`. Validation runs before any DB write so a bad value (unknown slug, type mismatch, select-choice miss, non-URL or non-http(s) URL for a `url` field) returns 400 `VALIDATION_ERROR` without leaving partial state behind. In the admin, registered fields render inline with Name, Bio, etc. — no separate section header — and are available in the **New byline** dialog as well as edit.
+
+  `BylineSummary` gains an optional `customFields: Record<string, CustomFieldValue>` property. Existing object-literal consumers stay source-compatible because the property is optional and runtime always returns `{}` when no fields are registered.
+
+  Hydration is symmetric with writes: rows are only applied to a byline when they live in the table matching the field's current `translatable` flag, so stale rows from a `translatable` flip can't leak into hydrated output. Schema mutations on `/byline-schema` invalidate the same `byline-fields` query the byline form reads, so newly-registered fields appear in the editor without a page reload. `url` field values are parsed with `new URL(...)` AND restricted to `http:` / `https:` schemes at write time so they can't ship `javascript:` / `data:` / `mailto:` payloads to link rendering. The `BylineFieldEditor` "Save" button stays disabled until a `select` field has at least one option; and select-option lists are accumulated on a null-prototype object so option values that collide with `Object.prototype` keys render correctly.
+
+  The field-definitions cache uses parity on `options.byline_fields_version` as a dirty bit: schema mutations flip the counter to odd before the write lands and to a **new even** value after, with the cache treating any odd version as "bypass the global holder, read fresh from the DB". `markVersionDirty` is parity-aware (ensures odd, no-op if already odd) so a crashed prior attempt's leftover dirty state can't get inverted. `markVersionClean` is **always-advance** (`+2` when starting even, `+1` when starting odd) so two concurrent mutators can't collapse on the same even key and pin the cache on a partial-set snapshot — every committed mutation produces an observable counter change for cache readers. Idempotent-retry exits (`FIELD_EXISTS` on create, `FIELD_NOT_FOUND` on update/delete, no-op input on update) call `markVersionClean` too, which doubles as both the dirty-crash recovery and the false-clean recovery. All version writes use `INSERT … ON CONFLICT DO UPDATE` so a missing options row can't silently turn invalidation into a no-op.
+
+  Implements [#1174](https://github.com/emdash-cms/emdash/discussions/1174). Builds on the bylines-i18n foundation from [#1146](https://github.com/emdash-cms/emdash/pull/1146).
+
+- [#1215](https://github.com/emdash-cms/emdash/pull/1215) [`590b2f9`](https://github.com/emdash-cms/emdash/commit/590b2f97367d6881d8c59e5f0a88e7ad69138acb) Thanks [@scottbuscemi](https://github.com/scottbuscemi)! - First-class HTML block in the admin editor. The existing `htmlBlock` Portable Text type (produced by the WordPress and Contentful importers) is now a fully editable block in the rich-text editor. Authors can insert an HTML block via the `/html` slash command and edit raw HTML in a textarea. Imported `htmlBlock` content that previously fell through to an opaque `pluginBlock` placeholder is now rendered in the same editable UI. The inline (visual-editing) editor preserves HTML blocks as read-only placeholders to prevent data loss.
+
+### Patch Changes
+
+- [#1298](https://github.com/emdash-cms/emdash/pull/1298) [`cd2dcc6`](https://github.com/emdash-cms/emdash/commit/cd2dcc6a56d19f38d6e13ba55e8563ceaab90ef8) Thanks [@ascorbic](https://github.com/ascorbic)! - Byline hydration now resolves the author avatar's storage key in the same query. `getEmDashCollection` / `getEmDashEntry` populate `entry.data.bylines[].byline.avatarStorageKey` (and `avatarAlt`) via a `LEFT JOIN` on the media table, so list pages can build a direct avatar URL without a per-byline `MediaRepository.findById`. Previously the byline summary exposed only `avatarMediaId` (a bare ULID with no file extension), forcing sites that want direct storage URLs into an N+1 media lookup. A page rendering 20 posts by distinct authors paid ~20 extra queries. The new fields are additive and null on the plain byline finders (`findById`, `findBySlug`), which do not join media; rely on the content-credit hydration path for them.
+
+- [#1197](https://github.com/emdash-cms/emdash/pull/1197) [`62c170f`](https://github.com/emdash-cms/emdash/commit/62c170f11403d76370d6c89f8fa25b0bbcf003fd) Thanks [@scottbuscemi](https://github.com/scottbuscemi)! - Persist welcome-dismissed flag in database instead of session. Previously the welcome modal would be shown every time a user logged-in.
+
+- [#1295](https://github.com/emdash-cms/emdash/pull/1295) [`ee67273`](https://github.com/emdash-cms/emdash/commit/ee67273df089d7ed858542fb0df16650f80cbb15) Thanks [@emdashbot](https://github.com/apps/emdashbot)! - fix(core/redirects): match exact redirects regardless of trailing slash ([#1271](https://github.com/emdash-cms/emdash/issues/1271))
+
+  Exact redirect rules now match requests with or without a trailing slash. A redirect stored with source `/old/` will also match a request for `/old`, and a redirect stored with source `/old` will also match `/old/`. The stored source is preserved unchanged; the fallback happens at lookup time.
+
+- [#1226](https://github.com/emdash-cms/emdash/pull/1226) [`9422d6a`](https://github.com/emdash-cms/emdash/commit/9422d6a744b17f477a3966c3c7e07a087a3345e6) Thanks [@scottbuscemi](https://github.com/scottbuscemi)! - Make content list search work on large collections ([#1219](https://github.com/emdash-cms/emdash/issues/1219)). The admin content list previously filtered only the rows already loaded on the current page, so an entry far back in a big collection could not be found until you navigated near it. The list endpoint now accepts a `q` parameter and performs a case-insensitive substring search across the collection's title/name/slug columns server-side (LIKE wildcards in the query are escaped), and the admin search box drives that query (debounced) instead of filtering in memory. Also adds locale-aware composite indexes (`idx_{table}_loc_upd` / `idx_{table}_loc_crt`) so locale-filtered content lists stay index-served on large, i18n-enabled tables.
+
+- [#1302](https://github.com/emdash-cms/emdash/pull/1302) [`1f8190d`](https://github.com/emdash-cms/emdash/commit/1f8190d2dee2f93a0a64ddfbe4f481cb6892ce2b) Thanks [@WellDunDun](https://github.com/WellDunDun)! - Fixes locale-aware content updates so REST, CLI, client, and MCP callers can safely update content by slug when multiple locales share the same slug.
+
+- [#1224](https://github.com/emdash-cms/emdash/pull/1224) [`67f5992`](https://github.com/emdash-cms/emdash/commit/67f5992aec23d02c724505632ce951e5b7af9cdb) Thanks [@scottbuscemi](https://github.com/scottbuscemi)! - Fix taxonomy terms not being locale-aware in the content editor ([#1218](https://github.com/emdash-cms/emdash/issues/1218)). Term assignments are stored against the per-locale content row while the term's `translation_group` spans every locale, so resolving terms for an entry must scope to the entry's locale. The content terms endpoint (`/content/:collection/:id/terms/:taxonomy`) now derives the entry's locale server-side and passes it to `getTermsForEntry`, and the admin `TaxonomySidebar` threads the entry locale through its fetch/save calls (and into its React Query keys, so switching translations refetches). Previously a localized post showed and applied every locale variant of a tag instead of just the variant for its own locale.
+
+- [#1227](https://github.com/emdash-cms/emdash/pull/1227) [`a40e455`](https://github.com/emdash-cms/emdash/commit/a40e455a8de730a61291798a3fe0ee32dde24ed0) Thanks [@scottbuscemi](https://github.com/scottbuscemi)! - Add search and filtering to the media library ([#1221](https://github.com/emdash-cms/emdash/issues/1221)). The media list endpoint now accepts a `q` parameter for a case-insensitive filename substring search (which also matches extensions, with LIKE wildcards escaped), alongside the existing `mimeType` filter. The Media Library page gains a filename search box and a type filter (images / video / audio / documents), and the media picker in the content editor now searches the local library by filename too. Previously neither surface could search or filter local media, which made large libraries hard to navigate.
+
+- [#1319](https://github.com/emdash-cms/emdash/pull/1319) [`69bdc97`](https://github.com/emdash-cms/emdash/commit/69bdc97e3e4b69a111b3e5210900e23f35134f8d) Thanks [@ascorbic](https://github.com/ascorbic)! - Fix `require is not defined` crash on every EmDash API route under `astro dev` on Cloudflare Workers ([#1292](https://github.com/emdash-cms/emdash/issues/1292)).
+
+  `@emdash-cms/registry-client` listed `semver` (CommonJS) in `dependencies`, which the build externalizes -- so consumers loaded a nested CJS copy. Vite's SSR module runner (workerd) evaluates modules with no `require` binding, so semver's internal `require()` threw and took down any route whose import graph reached registry-client (schema, plugins, env compatibility checks). semver is now bundled into the ESM output, so nothing CommonJS reaches the worker.
+
+- [#1285](https://github.com/emdash-cms/emdash/pull/1285) [`5e7f835`](https://github.com/emdash-cms/emdash/commit/5e7f83571dbc4832e91881aafbb470407c19b482) Thanks [@ascorbic](https://github.com/ascorbic)! - Fix SEO fields (noindex toggle, canonical URL) not affecting rendered pages. The content loader now surfaces per-entry SEO metadata on `entry.data.seo`, so `getSeoMeta()` reflects values set in the admin SEO panel. SEO is folded into the existing entry query via a LEFT JOIN, adding no extra database round-trips.
+
+- [#1298](https://github.com/emdash-cms/emdash/pull/1298) [`cd2dcc6`](https://github.com/emdash-cms/emdash/commit/cd2dcc6a56d19f38d6e13ba55e8563ceaab90ef8) Thanks [@ascorbic](https://github.com/ascorbic)! - Seed files can now attach an avatar to a byline. `bylines[].avatar` takes a `storageKey` (plus optional `alt`, `filename`, `mimeType`, `width`, `height`) for a file that already exists in the configured storage; applying the seed creates a `media` row and links it to the byline via `avatarMediaId`. Unlike a content `$media` reference, nothing is downloaded or uploaded, which suits seeding bylines alongside a media migration.
+
+- Updated dependencies [[`cccf4f2`](https://github.com/emdash-cms/emdash/commit/cccf4f2b40451efa724136e815158ebca189a135), [`28432b9`](https://github.com/emdash-cms/emdash/commit/28432b9b5a045c9227d59f7762bf9cb37067a950), [`886f2d1`](https://github.com/emdash-cms/emdash/commit/886f2d1e4969403787cc39dfbda6dcdfe034372c), [`a5dafb3`](https://github.com/emdash-cms/emdash/commit/a5dafb32b75358c96be5f2a2487bf323a0045bb8), [`9422d6a`](https://github.com/emdash-cms/emdash/commit/9422d6a744b17f477a3966c3c7e07a087a3345e6), [`67f5992`](https://github.com/emdash-cms/emdash/commit/67f5992aec23d02c724505632ce951e5b7af9cdb), [`a40e455`](https://github.com/emdash-cms/emdash/commit/a40e455a8de730a61291798a3fe0ee32dde24ed0), [`69bdc97`](https://github.com/emdash-cms/emdash/commit/69bdc97e3e4b69a111b3e5210900e23f35134f8d), [`34afc14`](https://github.com/emdash-cms/emdash/commit/34afc1448440f8ffab956f096322d67ec42127cb), [`590b2f9`](https://github.com/emdash-cms/emdash/commit/590b2f97367d6881d8c59e5f0a88e7ad69138acb), [`019d9e4`](https://github.com/emdash-cms/emdash/commit/019d9e44c5331d92abad78d7f9abfe2aefa4d1fe), [`ba0f3d4`](https://github.com/emdash-cms/emdash/commit/ba0f3d4f1d13d30d540895225556560bee176026), [`aacdf20`](https://github.com/emdash-cms/emdash/commit/aacdf207b6e31b98debacf12d52138d74371869f), [`7d55db6`](https://github.com/emdash-cms/emdash/commit/7d55db6ca3291eac1c2cfda865e1b0e507fdece5)]:
+  - @emdash-cms/admin@0.17.0
+  - @emdash-cms/registry-client@0.3.1
+  - @emdash-cms/auth@0.17.0
+  - @emdash-cms/gutenberg-to-portable-text@0.17.0
+
+## 0.16.1
+
+### Patch Changes
+
+- Updated dependencies [[`2c36d55`](https://github.com/emdash-cms/emdash/commit/2c36d5514f317d5c01a19def93956922d3b0557c), [`930d23b`](https://github.com/emdash-cms/emdash/commit/930d23bb0e3c3a860904996ef7ddd6c239572203)]:
+  - @emdash-cms/admin@0.16.1
+  - @emdash-cms/auth@0.16.1
+  - @emdash-cms/gutenberg-to-portable-text@0.16.1
+
+## 0.16.0
+
+### Minor Changes
+
+- [#1195](https://github.com/emdash-cms/emdash/pull/1195) [`47a8350`](https://github.com/emdash-cms/emdash/commit/47a83502fef22d837eb1269ac107858c59cb13e3) Thanks [@ascorbic](https://github.com/ascorbic)! - The per-collection sitemap (`/sitemap-{collection}.xml`) is now i18n-aware. When Astro i18n is enabled, each translation row is emitted as its own `<url>` with the correct locale prefix (resolved via Astro's own `getRelativeLocaleUrl`, so `prefixDefaultLocale` and custom `path` mappings are honoured). Every entry also lists its sibling translations as `<xhtml:link rel="alternate" hreflang="...">` (plus `x-default` for the default-locale variant), grouped by `translation_group`. Sites with a single locale or no i18n configured are unaffected -- their sitemap XML is unchanged.
+
+- [#1238](https://github.com/emdash-cms/emdash/pull/1238) [`60c0b2e`](https://github.com/emdash-cms/emdash/commit/60c0b2eeab7726471b313d0c453de82df1e08558) Thanks [@ascorbic](https://github.com/ascorbic)! - Registry plugins can now declare environment requirements. A plugin's manifest may set a release-level `requires` block (e.g. `{ "env:emdash": ">=1.0.0", "env:astro": ">=4.16" }`), which is published into the release record. When browsing a registry plugin, the admin compares those constraints against the running EmDash and Astro versions: if the host doesn't satisfy them, it shows a compatibility warning and disables the Install button. The server enforces the same check on install and update, refusing an incompatible release with `ENV_INCOMPATIBLE` so the gate can't be bypassed.
+
+- [#1239](https://github.com/emdash-cms/emdash/pull/1239) [`1a4918f`](https://github.com/emdash-cms/emdash/commit/1a4918ff989d57b4f12e44b647542e406dce7cb9) Thanks [@ascorbic](https://github.com/ascorbic)! - Plugins published to the experimental registry can now ship icon, screenshot, and banner images. Declare them in `emdash-plugin.jsonc` under `release.artifacts` as file refs; `emdash-plugin publish --artifact-base-url <url>` measures each image's dimensions, uploads it, and records it in the release. The admin plugin detail page renders the icon, banner, and a screenshot gallery, fetched through a server-side image proxy. The proxy resolves each artifact's URL server-side from the validated release record (the client sends only the artifact's coordinates, never a URL), then applies SSRF defences and an image content-type allowlist before serving the bytes. Supported image types are PNG, JPEG, WebP, GIF, and AVIF; SVG is rejected at both publish and proxy because it is active content.
+
+- [#1064](https://github.com/emdash-cms/emdash/pull/1064) [`33f76b8`](https://github.com/emdash-cms/emdash/commit/33f76b863542a5d040f0e3882cab036e1a410eca) Thanks [@Glacier-Luo](https://github.com/Glacier-Luo)! - Adds field-level and range filtering to `getEmDashCollection`'s `where` option. Previously, only taxonomy-based keys were processed via JOIN; non-taxonomy field names were silently discarded. Now the `where` clause supports exact match (`string`), multi-value match (`string[]`), and range comparisons (`{ gt?, gte?, lt?, lte? }`) on any content table column, all executed at the SQL layer with parameterized queries.
+
+### Patch Changes
+
+- [#1159](https://github.com/emdash-cms/emdash/pull/1159) [`e312528`](https://github.com/emdash-cms/emdash/commit/e312528c4560946a43e2e65bd5617733cd98ea75) Thanks [@jp-knj](https://github.com/jp-knj)! - Fix scheduled posts missing from snapshot export on SQLite/D1 until UTC midnight.
+
+- [#1166](https://github.com/emdash-cms/emdash/pull/1166) [`668c5e1`](https://github.com/emdash-cms/emdash/commit/668c5e1a9d2465d1d255ac00375b3d49d67538ba) Thanks [@OrangeManLi](https://github.com/OrangeManLi)! - Fixes `portableTextToProsemirror` flattening nested lists whose subtree mixes `listItem` types. The outer run-grouping broke on the first nested type switch (e.g. an `orderedList` child under a `bulletList` parent), so an input like `[bullet L1, number L2, bullet L1]` was emitted as three separate top-level lists instead of one bullet list with a numbered sub-list under the first item. Internal `convertList`/`convertListItem` recursion was already correct — only the outer grouping needed to be widened to include `level > 1` blocks regardless of `listItem` type.
+
+- [#1160](https://github.com/emdash-cms/emdash/pull/1160) [`f62c004`](https://github.com/emdash-cms/emdash/commit/f62c0042a2ded0265aed1157054c7326beb125ac) Thanks [@CacheMeOwside](https://github.com/CacheMeOwside)! - Fixes Postgres server bundles importing `better-sqlite3`, which crashed production starts (`pnpm preview`, `pnpm start`) with `ERR_MODULE_NOT_FOUND` because the SQLite driver is not installed in Postgres-only deployments. Moved `EmDashDatabaseError` into a new SQLite driver-free `database/errors.ts` and re-exported it from there, so the `better-sqlite3` import doesn't leak into the Postgres build.
+
+- [#985](https://github.com/emdash-cms/emdash/pull/985) [`5456514`](https://github.com/emdash-cms/emdash/commit/54565143205035e475dabb16075e09ade046a74c) Thanks [@ppppangu](https://github.com/ppppangu)! - Fixes public form embeds during SSR by allowing frontend plugin components to call public plugin routes without self-fetching.
+
+- [#1157](https://github.com/emdash-cms/emdash/pull/1157) [`7554bd3`](https://github.com/emdash-cms/emdash/commit/7554bd3ba81477383d2616df209050cb29e6ad17) Thanks [@jp-knj](https://github.com/jp-knj)! - Fix scheduled posts not appearing on SQLite/D1 until UTC midnight.
+
+- [#1196](https://github.com/emdash-cms/emdash/pull/1196) [`e9877e1`](https://github.com/emdash-cms/emdash/commit/e9877e15e4e4ab6906f06342d3e1dbe4532a8acc) Thanks [@Rimander](https://github.com/Rimander)! - Fix WordPress import leaving `featured_image` (and other image/file fields) pointing at the original WordPress URL after media download. The rewrite step passed the whole stored MediaValue JSON to the URL matcher instead of its inner `src`, so the field was never rewritten to the local R2 URL even though the file existed in the media table. Inline content images were unaffected.
+
+- Updated dependencies [[`62619c2`](https://github.com/emdash-cms/emdash/commit/62619c2d7eeb0ea1ff4178ec4090c2872df51073), [`3d540da`](https://github.com/emdash-cms/emdash/commit/3d540daf4b2c89c408038ae55799e2513c1ef9c9), [`b89e988`](https://github.com/emdash-cms/emdash/commit/b89e988da2a930450ae237ae55b2594bbf395770), [`4612749`](https://github.com/emdash-cms/emdash/commit/4612749770dba13ac6e01e8953854f318b9913dd), [`60c0b2e`](https://github.com/emdash-cms/emdash/commit/60c0b2eeab7726471b313d0c453de82df1e08558), [`1a4918f`](https://github.com/emdash-cms/emdash/commit/1a4918ff989d57b4f12e44b647542e406dce7cb9), [`d2f2679`](https://github.com/emdash-cms/emdash/commit/d2f26792bc8f053693bfb0a6a9d65a7403753f0a)]:
+  - @emdash-cms/admin@0.16.0
+  - @emdash-cms/registry-client@0.3.0
+  - @emdash-cms/auth@0.16.0
+  - @emdash-cms/gutenberg-to-portable-text@0.16.0
+
 ## 0.15.0
 
 ### Minor Changes

@@ -108,6 +108,12 @@ export interface EmDashManifest {
 	version: string;
 	commit?: string;
 	hash: string;
+	/**
+	 * Version of Astro the host project is built with. Present when the
+	 * integration could resolve it. Surfaced so the admin can evaluate a
+	 * registry plugin's `env:astro` requirement against the running host.
+	 */
+	astroVersion?: string;
 	collections: Record<string, ManifestCollection>;
 	plugins: Record<string, ManifestPlugin>;
 	/**
@@ -227,8 +233,15 @@ export interface EmDashHandlers {
 			orderBy?: string;
 			order?: "asc" | "desc";
 			locale?: string;
+			q?: string;
+			authorId?: string;
+			dateField?: "createdAt" | "updatedAt" | "publishedAt";
+			dateFrom?: string;
+			dateTo?: string;
 		},
 	) => Promise<HandlerResponse>;
+
+	handleContentAuthors: (collection: string) => Promise<HandlerResponse>;
 
 	handleContentGet: (
 		collection: string,
@@ -268,6 +281,7 @@ export interface EmDashHandlers {
 			status?: string;
 			authorId?: string | null;
 			bylines?: Array<{ bylineId: string; roleLabel?: string | null }>;
+			locale?: string;
 			seo?: {
 				title?: string | null;
 				description?: string | null;
@@ -306,7 +320,7 @@ export interface EmDashHandlers {
 	handleContentPublish: (
 		collection: string,
 		id: string,
-		options?: { publishedAt?: string },
+		options?: { publishedAt?: string; requireScheduledDue?: boolean },
 	) => Promise<HandlerResponse>;
 
 	handleContentUnpublish: (collection: string, id: string) => Promise<HandlerResponse>;

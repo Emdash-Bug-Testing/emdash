@@ -1,5 +1,148 @@
 # @emdash-cms/admin
 
+## 0.19.0
+
+### Minor Changes
+
+- [#1442](https://github.com/emdash-cms/emdash/pull/1442) [`e96587f`](https://github.com/emdash-cms/emdash/commit/e96587f8ff393939355d3d643a322fe7b2c07c86) Thanks [@ascorbic](https://github.com/ascorbic)! - Add status, author, and date-range filtering to the admin content list ([#1288](https://github.com/emdash-cms/emdash/issues/1288)). The content list API gains `authorId`, `dateField`, `dateFrom`, and `dateTo` query params (all additive and optional), and a new `GET /_emdash/api/content/{collection}/authors` endpoint lists the distinct authors of a collection's content (gated on `content:read`). Filtering runs server-side, so it works across the whole collection rather than only the loaded page.
+
+### Patch Changes
+
+- [#1307](https://github.com/emdash-cms/emdash/pull/1307) [`cedfcc5`](https://github.com/emdash-cms/emdash/commit/cedfcc527d47131baaa5dcfb29fb7b4a966265d5) Thanks [@emdashbot](https://github.com/apps/emdashbot)! - Forward `locale` query param through admin content edit route, content list navigation links, and API client to resolve correct i18n variant for slug-based lookups ([#1242](https://github.com/emdash-cms/emdash/issues/1242))
+
+- [#1417](https://github.com/emdash-cms/emdash/pull/1417) [`7e70abc`](https://github.com/emdash-cms/emdash/commit/7e70abcc1434dc2fd94c1f51c8c8c76acc9aa536) Thanks [@emdashbot](https://github.com/apps/emdashbot)! - Fix taxonomy term edit dialog overflow with many locales ([#1269](https://github.com/emdash-cms/emdash/issues/1269))
+
+  Adds `max-h-[85vh] flex flex-col` to the `TermFormDialog` and makes its body
+  scrollable with `flex-1 overflow-y-auto`, keeping the header and footer pinned.
+  This prevents the Cancel/Update buttons from falling off-screen when the
+  Translations panel lists a large number of locales.
+
+- [#1440](https://github.com/emdash-cms/emdash/pull/1440) [`783e663`](https://github.com/emdash-cms/emdash/commit/783e66365d5800e01ab445cbb411237240ff2ab4) Thanks [@diogoascarneiro](https://github.com/diogoascarneiro)! - Add a visible WYSIWYG toolbar button for inserting HTML blocks, matching the existing `/html` shortcut.
+
+- [#1142](https://github.com/emdash-cms/emdash/pull/1142) [`157237d`](https://github.com/emdash-cms/emdash/commit/157237d6b3db0301f059534c9390bdef0a02b0cf) Thanks [@OrangeManLi](https://github.com/OrangeManLi)! - Fixes nested-list serialization in the Portable Text editor. `convertList` now recurses into nested `bulletList`/`orderedList` children and emits each block with the correct `level` value, so Tab-indented list items in the editor round-trip through `onChange` as real nested portable-text blocks instead of being flattened to a single top-level list with every item at `level: 1`.
+
+- Updated dependencies []:
+  - @emdash-cms/blocks@0.19.0
+
+## 0.18.0
+
+### Patch Changes
+
+- [#1384](https://github.com/emdash-cms/emdash/pull/1384) [`d2829e3`](https://github.com/emdash-cms/emdash/commit/d2829e36c0e568db4ec92f500b166e03f0c36973) Thanks [@ahliweb](https://github.com/ahliweb)! - Updates the Indonesian admin catalog for the byline schema and custom-field management UI with formal, complete translations.
+
+- Updated dependencies []:
+  - @emdash-cms/blocks@0.18.0
+
+## 0.17.2
+
+### Patch Changes
+
+- [#1305](https://github.com/emdash-cms/emdash/pull/1305) [`4ee75f8`](https://github.com/emdash-cms/emdash/commit/4ee75f851da4461a599f892c820152377625ef70) Thanks [@eyupcanakman](https://github.com/eyupcanakman)! - Fixes plugin admin pages showing a Plugin Error when opened from the Plugin Manager. The Settings gear opens a plugin at its root (`/plugins/<id>/`), but a plugin that registers its page at `/settings` rather than `/` had no page there, so the admin fell through to a 404. Plugin page resolution now resolves the plugin root to the first registered page and treats `/settings` and `/settings/` as the same path, so a single registration works from the Plugin Manager gear and the sidebar regardless of trailing slash.
+
+- Updated dependencies []:
+  - @emdash-cms/blocks@0.17.2
+
+## 0.17.1
+
+### Patch Changes
+
+- [#1342](https://github.com/emdash-cms/emdash/pull/1342) [`83daa41`](https://github.com/emdash-cms/emdash/commit/83daa4149ed0d1ccf23d9f90304ef6ba3545d46f) Thanks [@bergaaberg](https://github.com/bergaaberg)! - Adds Norwegian Bokmål (nb) locale to the admin UI.
+
+- [#1334](https://github.com/emdash-cms/emdash/pull/1334) [`dfabafe`](https://github.com/emdash-cms/emdash/commit/dfabafeb5db9c27c861015e7d426eb40d6ed940a) Thanks [@theobaidur](https://github.com/theobaidur)! - Honor the `icon` field on plugin `adminPages` in the sidebar nav.
+
+  Plugin admin pages declared via `adminPages: [{ path, label, icon }]` previously rendered with a hardcoded `PuzzlePiece` glyph — the `icon` field was accepted in the types but never read at runtime. The sidebar now resolves the icon name to its `@phosphor-icons/react` component: common documented names (`settings`, `chart`, `history`, `image`, `trophy`, …) are statically mapped so they resolve synchronously, and any other name is matched against the full Phosphor set by converting it to PascalCase (e.g. `chart-bar` → `ChartBar`) and lazy-loading it from a code-split chunk. The full set is therefore reachable without bundling it into the admin's main chunk. Unknown or omitted names fall back to `PuzzlePiece`, so the change is purely additive.
+
+- Updated dependencies []:
+  - @emdash-cms/blocks@0.17.1
+
+## 0.17.0
+
+### Minor Changes
+
+- [#1258](https://github.com/emdash-cms/emdash/pull/1258) [`28432b9`](https://github.com/emdash-cms/emdash/commit/28432b9b5a045c9227d59f7762bf9cb37067a950) Thanks [@MohamedH1998](https://github.com/MohamedH1998)! - Adds custom fields to bylines. Sites can define site-specific byline metadata (Twitter handle, pronouns, company, localised job title, etc.) via the new `/byline-schema` admin screen, accessed from the **Byline schema** link button at the top of the Bylines admin page (admin-only).
+
+  Per-field `translatable` flag picks whether values are stored per-locale (one value per locale row in a `translation_group`) or shared across every locale variant of the same byline identity. Schema management is gated by `schema:manage`; value editing by `bylines:manage`.
+
+  Custom-field values can be set at both create and update time. `POST` and `PUT` on `/_emdash/api/admin/bylines` accept the same `customFields` map; the row write and the custom-field writes share a single transaction on Node/PG so a partial failure rolls both back. On D1 (no transactions), a retry POST is treated as completing an abandoned create iff three checks all pass: (a) every fixed column on the existing row matches the new payload (`displayName`, `bio`, `avatarMediaId`, `websiteUrl`, `userId`, `isGuest`, effective locale — null-vs-undefined normalised); (b) the existing row's `translationGroup` matches what a fresh create with the same input would produce (`sourceGroup` when `translationOf` is present, `existing.id` when it isn't); (c) every custom-field value already stored on the row appears in the input payload with an equal value (subset-match, so partial mid-loop crashes can be completed). The recovery branch is conservative on every axis: any fixed-column mismatch, any translation-group mismatch, any overlapping custom-field value mismatch, an input that omits a key the existing row stores, or an input with no custom fields at all → standard `CONFLICT`. Validation runs before any DB write so a bad value (unknown slug, type mismatch, select-choice miss, non-URL or non-http(s) URL for a `url` field) returns 400 `VALIDATION_ERROR` without leaving partial state behind. In the admin, registered fields render inline with Name, Bio, etc. — no separate section header — and are available in the **New byline** dialog as well as edit.
+
+  `BylineSummary` gains an optional `customFields: Record<string, CustomFieldValue>` property. Existing object-literal consumers stay source-compatible because the property is optional and runtime always returns `{}` when no fields are registered.
+
+  Hydration is symmetric with writes: rows are only applied to a byline when they live in the table matching the field's current `translatable` flag, so stale rows from a `translatable` flip can't leak into hydrated output. Schema mutations on `/byline-schema` invalidate the same `byline-fields` query the byline form reads, so newly-registered fields appear in the editor without a page reload. `url` field values are parsed with `new URL(...)` AND restricted to `http:` / `https:` schemes at write time so they can't ship `javascript:` / `data:` / `mailto:` payloads to link rendering. The `BylineFieldEditor` "Save" button stays disabled until a `select` field has at least one option; and select-option lists are accumulated on a null-prototype object so option values that collide with `Object.prototype` keys render correctly.
+
+  The field-definitions cache uses parity on `options.byline_fields_version` as a dirty bit: schema mutations flip the counter to odd before the write lands and to a **new even** value after, with the cache treating any odd version as "bypass the global holder, read fresh from the DB". `markVersionDirty` is parity-aware (ensures odd, no-op if already odd) so a crashed prior attempt's leftover dirty state can't get inverted. `markVersionClean` is **always-advance** (`+2` when starting even, `+1` when starting odd) so two concurrent mutators can't collapse on the same even key and pin the cache on a partial-set snapshot — every committed mutation produces an observable counter change for cache readers. Idempotent-retry exits (`FIELD_EXISTS` on create, `FIELD_NOT_FOUND` on update/delete, no-op input on update) call `markVersionClean` too, which doubles as both the dirty-crash recovery and the false-clean recovery. All version writes use `INSERT … ON CONFLICT DO UPDATE` so a missing options row can't silently turn invalidation into a no-op.
+
+  Implements [#1174](https://github.com/emdash-cms/emdash/discussions/1174). Builds on the bylines-i18n foundation from [#1146](https://github.com/emdash-cms/emdash/pull/1146).
+
+- [#1215](https://github.com/emdash-cms/emdash/pull/1215) [`590b2f9`](https://github.com/emdash-cms/emdash/commit/590b2f97367d6881d8c59e5f0a88e7ad69138acb) Thanks [@scottbuscemi](https://github.com/scottbuscemi)! - First-class HTML block in the admin editor. The existing `htmlBlock` Portable Text type (produced by the WordPress and Contentful importers) is now a fully editable block in the rich-text editor. Authors can insert an HTML block via the `/html` slash command and edit raw HTML in a textarea. Imported `htmlBlock` content that previously fell through to an opaque `pluginBlock` placeholder is now rendered in the same editable UI. The inline (visual-editing) editor preserves HTML blocks as read-only placeholders to prevent data loss.
+
+### Patch Changes
+
+- [#1297](https://github.com/emdash-cms/emdash/pull/1297) [`cccf4f2`](https://github.com/emdash-cms/emdash/commit/cccf4f2b40451efa724136e815158ebca189a135) Thanks [@emdashbot](https://github.com/apps/emdashbot)! - Fix content entity editor block menu actions (Duplicate / Delete) not working when the drag handle sets a NodeSelection ([#1261](https://github.com/emdash-cms/emdash/issues/1261)).
+
+- [#1225](https://github.com/emdash-cms/emdash/pull/1225) [`886f2d1`](https://github.com/emdash-cms/emdash/commit/886f2d1e4969403787cc39dfbda6dcdfe034372c) Thanks [@scottbuscemi](https://github.com/scottbuscemi)! - Add search to the byline picker on content entities and remove the effective 100-byline cap. The picker now performs a debounced server-side search via the bylines API instead of rendering a fixed dropdown of the first 100 results, so bylines beyond the first page can be found and credited. Credited bylines from the saved entry are also resolved from the entry itself, so a credit that falls outside the initial list still renders its name instead of disappearing.
+
+- [#1222](https://github.com/emdash-cms/emdash/pull/1222) [`a5dafb3`](https://github.com/emdash-cms/emdash/commit/a5dafb32b75358c96be5f2a2487bf323a0045bb8) Thanks [@scottbuscemi](https://github.com/scottbuscemi)! - Fixes the byline search box reloading the whole page on every keystroke. The search term is now debounced (300ms) before it feeds the bylines query, and the full-page loader only takes over when there is no data yet (`isLoading && !data`) instead of on every new query key. Typing now stays responsive and keeps the input focused, matching the behaviour of the users page. The load-more snapshot and its filter-match check both use the debounced search value so appended pages are no longer discarded.
+
+- [#1226](https://github.com/emdash-cms/emdash/pull/1226) [`9422d6a`](https://github.com/emdash-cms/emdash/commit/9422d6a744b17f477a3966c3c7e07a087a3345e6) Thanks [@scottbuscemi](https://github.com/scottbuscemi)! - Make content list search work on large collections ([#1219](https://github.com/emdash-cms/emdash/issues/1219)). The admin content list previously filtered only the rows already loaded on the current page, so an entry far back in a big collection could not be found until you navigated near it. The list endpoint now accepts a `q` parameter and performs a case-insensitive substring search across the collection's title/name/slug columns server-side (LIKE wildcards in the query are escaped), and the admin search box drives that query (debounced) instead of filtering in memory. Also adds locale-aware composite indexes (`idx_{table}_loc_upd` / `idx_{table}_loc_crt`) so locale-filtered content lists stay index-served on large, i18n-enabled tables.
+
+- [#1224](https://github.com/emdash-cms/emdash/pull/1224) [`67f5992`](https://github.com/emdash-cms/emdash/commit/67f5992aec23d02c724505632ce951e5b7af9cdb) Thanks [@scottbuscemi](https://github.com/scottbuscemi)! - Fix taxonomy terms not being locale-aware in the content editor ([#1218](https://github.com/emdash-cms/emdash/issues/1218)). Term assignments are stored against the per-locale content row while the term's `translation_group` spans every locale, so resolving terms for an entry must scope to the entry's locale. The content terms endpoint (`/content/:collection/:id/terms/:taxonomy`) now derives the entry's locale server-side and passes it to `getTermsForEntry`, and the admin `TaxonomySidebar` threads the entry locale through its fetch/save calls (and into its React Query keys, so switching translations refetches). Previously a localized post showed and applied every locale variant of a tag instead of just the variant for its own locale.
+
+- [#1227](https://github.com/emdash-cms/emdash/pull/1227) [`a40e455`](https://github.com/emdash-cms/emdash/commit/a40e455a8de730a61291798a3fe0ee32dde24ed0) Thanks [@scottbuscemi](https://github.com/scottbuscemi)! - Add search and filtering to the media library ([#1221](https://github.com/emdash-cms/emdash/issues/1221)). The media list endpoint now accepts a `q` parameter for a case-insensitive filename substring search (which also matches extensions, with LIKE wildcards escaped), alongside the existing `mimeType` filter. The Media Library page gains a filename search box and a type filter (images / video / audio / documents), and the media picker in the content editor now searches the local library by filename too. Previously neither surface could search or filter local media, which made large libraries hard to navigate.
+
+- [#1223](https://github.com/emdash-cms/emdash/pull/1223) [`34afc14`](https://github.com/emdash-cms/emdash/commit/34afc1448440f8ffab956f096322d67ec42127cb) Thanks [@scottbuscemi](https://github.com/scottbuscemi)! - The rich-text editor formatting toolbar now stays pinned to the top of the editing area while scrolling through long posts, instead of scrolling out of view. The toolbar uses `position: sticky` and the editor wrapper switched from `overflow-hidden` to `overflow-clip` so corners stay clipped without creating a nested scroll container that would break sticky positioning. Distraction-free / minimal editors (e.g. Widgets) are unaffected since they don't render the toolbar.
+
+- [#1309](https://github.com/emdash-cms/emdash/pull/1309) [`019d9e4`](https://github.com/emdash-cms/emdash/commit/019d9e44c5331d92abad78d7f9abfe2aefa4d1fe) Thanks [@ahliweb](https://github.com/ahliweb)! - Fix the remaining Indonesian admin translations.
+
+- [#1310](https://github.com/emdash-cms/emdash/pull/1310) [`ba0f3d4`](https://github.com/emdash-cms/emdash/commit/ba0f3d4f1d13d30d540895225556560bee176026) Thanks [@emdashbot](https://github.com/apps/emdashbot)! - Fix "Add Content" in the menu editor: the admin was sending the raw collection slug (e.g. `pages`) as the menu item `type`, which the API's `menuItemTypeEnum` rejects with a 400. Map the picker's collection to the correct enum value (`pages` → `page`, `posts` → `post`, everything else → `collection`) so picking a page or post actually adds it to the menu. ([#1173](https://github.com/emdash-cms/emdash/issues/1173))
+
+- [#1290](https://github.com/emdash-cms/emdash/pull/1290) [`aacdf20`](https://github.com/emdash-cms/emdash/commit/aacdf207b6e31b98debacf12d52138d74371869f) Thanks [@SL33PiNg](https://github.com/SL33PiNg)! - i18n(th): translate remaining untranslated Thai (ไทย) admin UI strings, including the newly-added plugin registry and Portable Text HTML-block strings
+
+- [#1245](https://github.com/emdash-cms/emdash/pull/1245) [`7d55db6`](https://github.com/emdash-cms/emdash/commit/7d55db6ca3291eac1c2cfda865e1b0e507fdece5) Thanks [@SL33PiNg](https://github.com/SL33PiNg)! - Adds Thai (ไทย) locale to the admin UI.
+
+- Updated dependencies [[`69bdc97`](https://github.com/emdash-cms/emdash/commit/69bdc97e3e4b69a111b3e5210900e23f35134f8d)]:
+  - @emdash-cms/registry-client@0.3.1
+  - @emdash-cms/blocks@0.17.0
+
+## 0.16.1
+
+### Patch Changes
+
+- [#1277](https://github.com/emdash-cms/emdash/pull/1277) [`2c36d55`](https://github.com/emdash-cms/emdash/commit/2c36d5514f317d5c01a19def93956922d3b0557c) Thanks [@ahliweb](https://github.com/ahliweb)! - Completes the Indonesian translations for the admin UI and keeps `id` as the canonical locale code.
+
+- [#1278](https://github.com/emdash-cms/emdash/pull/1278) [`930d23b`](https://github.com/emdash-cms/emdash/commit/930d23bb0e3c3a860904996ef7ddd6c239572203) Thanks [@ascorbic](https://github.com/ascorbic)! - Fix admin sidebar rendering white text on a light background in light mode. Kumo 2.4 moved the sidebar surface to an inner container painted with `bg-(--sidebar-bg)`, where `--sidebar-bg` is resolved from the wrapper's default (light) `--color-kumo-base`. The sidebar's dark-chrome override only set `--color-kumo-base`, which no longer reaches that surface, so the dark background was lost while the white text remained. The override now sets `--sidebar-bg` directly.
+
+- Updated dependencies []:
+  - @emdash-cms/blocks@0.16.1
+
+## 0.16.0
+
+### Minor Changes
+
+- [#1238](https://github.com/emdash-cms/emdash/pull/1238) [`60c0b2e`](https://github.com/emdash-cms/emdash/commit/60c0b2eeab7726471b313d0c453de82df1e08558) Thanks [@ascorbic](https://github.com/ascorbic)! - Registry plugins can now declare environment requirements. A plugin's manifest may set a release-level `requires` block (e.g. `{ "env:emdash": ">=1.0.0", "env:astro": ">=4.16" }`), which is published into the release record. When browsing a registry plugin, the admin compares those constraints against the running EmDash and Astro versions: if the host doesn't satisfy them, it shows a compatibility warning and disables the Install button. The server enforces the same check on install and update, refusing an incompatible release with `ENV_INCOMPATIBLE` so the gate can't be bypassed.
+
+- [#1239](https://github.com/emdash-cms/emdash/pull/1239) [`1a4918f`](https://github.com/emdash-cms/emdash/commit/1a4918ff989d57b4f12e44b647542e406dce7cb9) Thanks [@ascorbic](https://github.com/ascorbic)! - Plugins published to the experimental registry can now ship icon, screenshot, and banner images. Declare them in `emdash-plugin.jsonc` under `release.artifacts` as file refs; `emdash-plugin publish --artifact-base-url <url>` measures each image's dimensions, uploads it, and records it in the release. The admin plugin detail page renders the icon, banner, and a screenshot gallery, fetched through a server-side image proxy. The proxy resolves each artifact's URL server-side from the validated release record (the client sends only the artifact's coordinates, never a URL), then applies SSRF defences and an image content-type allowlist before serving the bytes. Supported image types are PNG, JPEG, WebP, GIF, and AVIF; SVG is rejected at both publish and proxy because it is active content.
+
+- [#1253](https://github.com/emdash-cms/emdash/pull/1253) [`d2f2679`](https://github.com/emdash-cms/emdash/commit/d2f26792bc8f053693bfb0a6a9d65a7403753f0a) Thanks [@ascorbic](https://github.com/ascorbic)! - The registry plugin detail page now surfaces a plugin's long-form profile sections. Publishers' `description`, `installation`, `faq`, `changelog`, and `security` sections render as sanitized Markdown (the shared audited `renderMarkdown` — raw HTML, scripts, and images stripped, https-only links) in a tabbed view below the install action, with one tab per non-empty section. The page also shows an SBOM badge with the document format and a guarded direct download link (rendered only for safe http(s) URLs), the publisher-asserted `lastUpdated` time labelled distinctly from the aggregator's `indexedAt`, and an accessible tooltip on the verified-publisher shield naming the labeller DID that issued the verification.
+
+### Patch Changes
+
+- [#1257](https://github.com/emdash-cms/emdash/pull/1257) [`62619c2`](https://github.com/emdash-cms/emdash/commit/62619c2d7eeb0ea1ff4178ec4090c2872df51073) Thanks [@Rimander](https://github.com/Rimander)! - Completes the Spanish (Spain) admin translation, filling the 54 remaining untranslated strings across the plugin registry, SEO/social-image settings, the code-block editor, byline/content strings, and the capability-consent dialog. The `es-ES` catalog is now fully translated.
+
+- [#1255](https://github.com/emdash-cms/emdash/pull/1255) [`3d540da`](https://github.com/emdash-cms/emdash/commit/3d540daf4b2c89c408038ae55799e2513c1ef9c9) Thanks [@ascorbic](https://github.com/ascorbic)! - Fix admin crash on authenticated load with @cloudflare/kumo 2.4.x ([#1240](https://github.com/emdash-cms/emdash/issues/1240)). The
+  sidebar was using `Sidebar.GroupContent` and group-level `collapsible`/
+  `defaultOpen` props, which were removed in kumo 2.4.0. The four nav sections
+  (Content, Manage, Admin, Plugins) now render as plain `Sidebar.Group` blocks.
+  The workspace catalog range for `@cloudflare/kumo` is bumped from `^2.3.0` to
+  `^2.4.0` to match.
+
+- [#1248](https://github.com/emdash-cms/emdash/pull/1248) [`b89e988`](https://github.com/emdash-cms/emdash/commit/b89e988da2a930450ae237ae55b2594bbf395770) Thanks [@mvanhorn](https://github.com/mvanhorn)! - Fixes the flat taxonomy tag picker so focusing an empty input shows available existing terms for the collection.
+
+- [#1244](https://github.com/emdash-cms/emdash/pull/1244) [`4612749`](https://github.com/emdash-cms/emdash/commit/4612749770dba13ac6e01e8953854f318b9913dd) Thanks [@pitscher](https://github.com/pitscher)! - Fixes admin UI translations for permission counts and action labels so languages can use their correct plural forms and word order
+
+- Updated dependencies [[`60c0b2e`](https://github.com/emdash-cms/emdash/commit/60c0b2eeab7726471b313d0c453de82df1e08558)]:
+  - @emdash-cms/registry-client@0.3.0
+  - @emdash-cms/blocks@0.16.0
+
 ## 0.15.0
 
 ### Minor Changes

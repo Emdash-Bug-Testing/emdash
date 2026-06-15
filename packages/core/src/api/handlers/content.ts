@@ -14,13 +14,17 @@ import { RevisionRepository } from "../../database/repositories/revision.js";
 import { SeoRepository } from "../../database/repositories/seo.js";
 import {
 	EmDashValidationError,
+	ScheduledNotDueError,
 	InvalidCursorError,
 	type BylineSummary,
 	type ContentBylineCredit,
+	type ContentDateField,
 	type ContentItem,
 	type ContentSeo,
 	type ContentSeoInput,
+	type FindManyOptions,
 } from "../../database/repositories/types.js";
+import { UserRepository } from "../../database/repositories/user.js";
 import { withTransaction } from "../../database/transaction.js";
 import type { Database } from "../../database/types.js";
 import { validateIdentifier } from "../../database/validate.js";
@@ -296,6 +300,52 @@ export interface TrashedContentItem {
 }
 
 /**
+ * Resolve the columns a content-list search should match against. Always
+ * includes `slug` (a standard column) and adds the `title`/`name` display
+ * fields when the collection actually defines them, mirroring the admin's
+ * item-title resolution (title -> name -> slug). Returning only existing
+ * columns avoids "no such column" errors on collections without them.
+ */
+async function resolveSearchColumns(db: Kysely<Database>, collection: string): Promise<string[]> {
+	const columns = ["slug"];
+	const row = await db
+		.selectFrom("_emdash_collections")
+		.select("id")
+		.where("slug", "=", collection)
+		.executeTakeFirst();
+	if (!row) return columns;
+
+	const fields = await db
+		.selectFrom("_emdash_fields")
+		.select("slug")
+		.where("collection_id", "=", row.id)
+		.execute();
+	const fieldSlugs = new Set(fields.map((f) => f.slug));
+	for (const candidate of ["title", "name"]) {
+		if (fieldSlugs.has(candidate)) columns.push(candidate);
+	}
+	return columns;
+}
+
+/** Matches a date-only `YYYY-MM-DD` bound (no time component). */
+const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/**
+ * Normalize a date-range bound to an ISO datetime for lexicographic comparison
+ * against stored ISO 8601 timestamps. A bare `YYYY-MM-DD` is widened to the
+ * appropriate UTC day boundary so the range stays inclusive: a `start` bound
+ * becomes the start of the day and an `end` bound the end of the day.
+ * Otherwise a date-only upper bound would exclude every same-day row (since
+ * `2024-06-01T12:00:00Z` sorts after `2024-06-01`). Full datetimes pass
+ * through unchanged.
+ */
+function normalizeDateBound(value: string | undefined, edge: "start" | "end"): string | undefined {
+	if (!value) return undefined;
+	if (!DATE_ONLY_RE.test(value)) return value;
+	return edge === "start" ? `${value}T00:00:00.000Z` : `${value}T23:59:59.999Z`;
+}
+
+/**
  * Create content list handler
  */
 export async function handleContentList(
@@ -308,13 +358,35 @@ export async function handleContentList(
 		orderBy?: string;
 		order?: "asc" | "desc";
 		locale?: string;
+		q?: string;
+		authorId?: string;
+		dateField?: ContentDateField;
+		dateFrom?: string;
+		dateTo?: string;
 	},
 ): Promise<ApiResult<ContentListResponse>> {
 	try {
 		const repo = new ContentRepository(db);
-		const where: { status?: string; locale?: string } = {};
+		const where: FindManyOptions["where"] = {};
 		if (params.status) where.status = params.status;
 		if (params.locale) where.locale = params.locale;
+		if (params.authorId) where.authorId = params.authorId;
+
+		// A date range requires a target column; ignore stray from/to without
+		// a field so a half-specified filter doesn't silently drop all rows.
+		if (params.dateField && (params.dateFrom || params.dateTo)) {
+			where.dateFilter = {
+				field: params.dateField,
+				from: normalizeDateBound(params.dateFrom, "start"),
+				to: normalizeDateBound(params.dateTo, "end"),
+			};
+		}
+
+		const q = params.q?.trim();
+		if (q) {
+			where.q = q;
+			where.searchColumns = await resolveSearchColumns(db, collection);
+		}
 
 		const result = await repo.findMany(collection, {
 			cursor: params.cursor,
@@ -367,6 +439,62 @@ export async function handleContentList(
 			error: {
 				code: "CONTENT_LIST_ERROR",
 				message: "Failed to list content",
+			},
+		};
+	}
+}
+
+/** A content author option for the admin author filter. */
+export interface ContentAuthor {
+	id: string;
+	name: string | null;
+	email: string;
+	avatarUrl: string | null;
+}
+
+/**
+ * List the distinct authors of a collection's live content.
+ *
+ * Backs the admin content-list author filter. Unlike `/admin/users` (ADMIN
+ * only), this is gated on `content:read`, so any editor can filter by author.
+ * Returns only users who have authored at least one non-trashed entry, sorted
+ * by display name then email for a stable dropdown order.
+ */
+export async function handleContentAuthors(
+	db: Kysely<Database>,
+	collection: string,
+): Promise<ApiResult<{ items: ContentAuthor[] }>> {
+	try {
+		const repo = new ContentRepository(db);
+		const authorIds = await repo.findDistinctAuthorIds(collection);
+		if (authorIds.length === 0) {
+			return { success: true, data: { items: [] } };
+		}
+
+		const userRepo = new UserRepository(db);
+		const users = await userRepo.findByIds(authorIds);
+
+		const items: ContentAuthor[] = users
+			.map((u) => ({ id: u.id, name: u.name, email: u.email, avatarUrl: u.avatarUrl }))
+			.toSorted((a, b) => (a.name ?? a.email).localeCompare(b.name ?? b.email));
+
+		return { success: true, data: { items } };
+	} catch (error) {
+		if (isMissingTableError(error)) {
+			return {
+				success: false,
+				error: {
+					code: "COLLECTION_NOT_FOUND",
+					message: `Collection '${collection}' not found`,
+				},
+			};
+		}
+		console.error("Content authors error:", error);
+		return {
+			success: false,
+			error: {
+				code: "CONTENT_AUTHORS_ERROR",
+				message: "Failed to list content authors",
 			},
 		};
 	}
@@ -655,6 +783,7 @@ export async function handleContentUpdate(
 		status?: string;
 		authorId?: string | null;
 		bylines?: ContentBylineInput[];
+		locale?: string;
 		_rev?: string;
 		seo?: ContentSeoInput;
 		publishedAt?: string | null;
@@ -682,7 +811,7 @@ export async function handleContentUpdate(
 		const repo = new ContentRepository(db);
 
 		// Resolve slug → ID if needed
-		const resolvedId = (await resolveId(repo, collection, id)) ?? id;
+		const resolvedId = (await resolveId(repo, collection, id, body.locale)) ?? id;
 
 		// Wrap content + SEO writes in a transaction for atomicity.
 		// The _rev check is inside the transaction so the read-then-write
@@ -1227,13 +1356,13 @@ export async function handleContentPublish(
 	db: Kysely<Database>,
 	collection: string,
 	id: string,
-	options: { publishedAt?: string } = {},
+	options: { publishedAt?: string; requireScheduledDue?: boolean } = {},
 ): Promise<ApiResult<ContentResponse>> {
 	try {
 		const item = await withTransaction(db, async (trx) => {
 			const repo = new ContentRepository(trx);
 			const resolvedId = (await resolveId(repo, collection, id)) ?? id;
-			return repo.publish(collection, resolvedId, options.publishedAt);
+			return repo.publish(collection, resolvedId, options.publishedAt, options.requireScheduledDue);
 		});
 
 		const hasSeo = await collectionHasSeo(db, collection);
@@ -1244,6 +1373,17 @@ export async function handleContentPublish(
 			data: { item },
 		};
 	} catch (error) {
+		// The scheduled sweep gates publish on the row still being due; a row
+		// unscheduled in the meantime is a silent skip, not a failure.
+		if (error instanceof ScheduledNotDueError) {
+			return {
+				success: false,
+				error: {
+					code: "NOT_DUE",
+					message: error.message,
+				},
+			};
+		}
 		if (error instanceof EmDashValidationError) {
 			return {
 				success: false,

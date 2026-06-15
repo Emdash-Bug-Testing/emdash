@@ -28,6 +28,12 @@ allowBuilds:
   better-sqlite3: true
   esbuild: true
   workerd: true
+  # Transitive @flue/runtime deps. The reviewer ran end-to-end with these
+  # build scripts ignored, so none are needed at runtime.
+  "@google/genai": false
+  "@mongodb-js/zstd": false
+  node-liblzma: false
+  protobufjs: false
 # Reviewed benign trust downgrades (publish-method changes, not takeovers).
 trustPolicyExclude:
   - "vite@6.4.1" # trusted-publisher -> provenance (vitejs CI change)
@@ -53,6 +59,7 @@ packages:
   - templates/*
   - packages/blocks/playground
   - e2e/fixture
+  - e2e/fixture-cloudflare
   - fixtures/*
   - docs
   - i18n
@@ -63,27 +70,27 @@ catalog:
   "@astrojs/cloudflare": ^13.5.3
   "@astrojs/node": ^10.1.1
   "@astrojs/react": ^5.0.0
-  "@atcute/atproto": ^3.1.11
+  "@atcute/atproto": ^4.0.2
   "@atcute/car": ^6.0.0
   "@atcute/cbor": ^2.3.3
   "@atcute/cid": ^2.4.1
-  "@atcute/client": ^4.2.1
+  "@atcute/client": ^5.0.0
   "@atcute/crypto": ^2.4.1
   "@atcute/firehose": ^1.0.0
   "@atcute/identity": ^2.0.0
   "@atcute/identity-resolver": ^2.0.0
   "@atcute/jetstream": ^2.0.0
   "@atcute/lex-cli": ^2.8.1
-  "@atcute/lexicons": ^1.3.0
+  "@atcute/lexicons": ^2.0.0
   "@atcute/mst": ^1.0.1
   "@atcute/multibase": ^1.2.0
-  "@atcute/oauth-node-client": ^1.1.0
+  "@atcute/oauth-node-client": ^2.0.0
   "@atcute/repo": ^1.0.0
   "@atcute/xrpc-server": ^2.0.0
   "@atcute/xrpc-server-cloudflare": ^2.0.0
   "@atproto/crypto": ^0.4.5
   "@atproto/repo": ^0.9.1
-  "@cloudflare/kumo": ^2.3.0
+  "@cloudflare/kumo": ^2.4.0
   "@cloudflare/vite-plugin": ^1.36.3
   "@cloudflare/vitest-pool-workers": ^0.16.3
   "@cloudflare/workers-types": ^4.20260305.1
@@ -126,18 +133,21 @@ catalog:
   "@types/better-sqlite3": ^7.6.12
   "@types/react": 19.2.14
   "@types/react-dom": 19.2.3
+  "@types/semver": ^7.5.8
   astro: ^6.3.0
   astro-iconset: ^0.0.4
   better-sqlite3: ^12.8.0
   chokidar: ^5.0.0
+  image-size: ^2.0.2
   jsonc-parser: ^3.3.1
   kysely: ^0.29.0
   publint: 0.3.17
   react: 19.2.4
   react-dom: 19.2.4
+  semver: ^7.6.3
   tsdown: 0.20.3
   typescript: ^6.0.3
   vite: ^8.0.11
   vitest: ^4.1.5
-  wrangler: ^4.83.0
+  wrangler: ^4.95.0
   zod: ^4.4.1
