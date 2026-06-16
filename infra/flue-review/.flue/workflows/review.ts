@@ -206,22 +206,30 @@ export async function run(ctx: FlueContext<ReviewPayload, Env>): Promise<ReviewR
 			},
 		);
 
+		// Telemetry (visible in Workers Logs / dashboard, not in `wrangler tail`
+		// for workflow DOs on flue 0.11): records what the model produced and
+		// whether we're about to post.
+		console.log("[review] result", {
+			prNumber: payload.prNumber,
+			hasToken: Boolean(token),
+			verdict: data.verdict,
+			summaryLen: data.summary.length,
+			findings: data.findings.length,
+		});
+
 		// Post from this trusted DO context (durable, not bound by the webhook's
 		// 30s waitUntil budget). In dev (no creds) we just log and return.
 		if (token) {
-			// Don't let a transient GitHub failure throw: that would discard the
-			// completed review AND trigger Flue's at-least-once workflow restart
-			// (a full re-review). Log and return the result instead.
 			try {
 				await postReview(token, payload.owner, payload.repo, payload.prNumber, data);
 			} catch (err) {
-				ctx.log.error?.("[review] postReview failed", {
-					error: String(err),
+				console.error("[review] postReview failed", {
+					error: err instanceof Error ? err.message : String(err),
 					prNumber: payload.prNumber,
 				});
 			}
 		} else {
-			ctx.log.info?.("[review] no GitHub App creds; skipping post", { prNumber: payload.prNumber });
+			console.log("[review] no GitHub App creds; skipping post", { prNumber: payload.prNumber });
 		}
 
 		return data;
