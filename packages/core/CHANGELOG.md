@@ -1,5 +1,28 @@
 # emdash
 
+## 0.22.0
+
+### Minor Changes
+
+- [#1484](https://github.com/emdash-cms/emdash/pull/1484) [`d46abfd`](https://github.com/emdash-cms/emdash/commit/d46abfdb739f8d242eddba5ebfda09a8648c8ecf) Thanks [@swissky](https://github.com/swissky)! - Forward declarative `portableTextBlocks` and `fieldWidgets` from standard and sandboxed (from-config) plugins
+
+  Standard- and sandboxed-format plugins could already declare admin pages and dashboard widgets, but their declarative Portable Text block types and field widgets were dropped during adaptation — only native-format plugins surfaced them. Since the admin editor reads these from the manifest, the slash-menu entries and Block Kit forms never appeared for non-native plugins.
+
+  `adaptSandboxEntry` now forwards both for standard plugins and sandboxed plugins resolved from config (the `virtual-modules.ts` codegen path), so those formats can contribute Portable Text blocks and field widgets. The site-side render component (`componentsEntry`) still requires native format, which is unchanged.
+
+  Note: marketplace bundles loaded from R2 are not covered yet — the bundle manifest schema, both `extractManifest()` implementations, and the bundler don't carry these fields, so this is scoped to standard/sandboxed-from-config. Full marketplace support is tracked as a follow-up.
+
+### Patch Changes
+
+- [#1509](https://github.com/emdash-cms/emdash/pull/1509) [`ed921d8`](https://github.com/emdash-cms/emdash/commit/ed921d80ec33fa114d9c8a7f9221f1fbeb24d658) Thanks [@ascorbic](https://github.com/ascorbic)! - Speeds up public page loads on remote databases (D1, Durable Objects) by eagerly warming site-global layout data (menus, widget areas, taxonomy term lists, settings) at the start of the request, so the layout's per-component reads overlap into roughly one round trip instead of executing serially. Transparent to site code; no template changes needed.
+
+- [#1538](https://github.com/emdash-cms/emdash/pull/1538) [`cb1c689`](https://github.com/emdash-cms/emdash/commit/cb1c68948072c479ed924b52867809bc8ad1c9e5) Thanks [@swissky](https://github.com/swissky)! - Fix logged-in pages hanging indefinitely on Cloudflare Workers ([#1274](https://github.com/emdash-cms/emdash/issues/1274)). A request cancelled mid-`session.get("user")` could leave the session-store read as a promise that never settles, poisoning the isolate so every later session-bearing request hung (0-CPU, multi-minute, `canceled`) — reliably reproducible on fresh isolates right after a deploy. Every session read on the request path (the main middleware, the auth middleware, and the preview-snapshot route) now goes through a shared `resolveSessionUser()` helper that anchors the read with `after()` so a cancelled request still drives it to completion (preventing the isolate poisoning), with a fail-closed timeout backstop that degrades a still-stalled read to "unauthenticated for this request" rather than hanging.
+
+- Updated dependencies [[`f4925b1`](https://github.com/emdash-cms/emdash/commit/f4925b1d2c36b147019335fc8f0de8bead1d47d9)]:
+  - @emdash-cms/admin@0.22.0
+  - @emdash-cms/auth@0.22.0
+  - @emdash-cms/gutenberg-to-portable-text@0.22.0
+
 ## 0.21.0
 
 ### Minor Changes
