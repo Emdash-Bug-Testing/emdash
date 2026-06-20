@@ -301,9 +301,9 @@ describe("SchemaRegistry", () => {
 			// text (TEXT) -> portableText (JSON) would change the physical column,
 			// which has no in-place migration. Reject rather than silently rewriting
 			// only the metadata and desyncing column_type from the real column.
-			await expect(
-				registry.updateField("posts", "body", { type: "portableText" }),
-			).rejects.toThrow(SchemaError);
+			await expect(registry.updateField("posts", "body", { type: "portableText" })).rejects.toThrow(
+				SchemaError,
+			);
 
 			// The stored type/column_type are untouched.
 			const field = await registry.getField("posts", "body");

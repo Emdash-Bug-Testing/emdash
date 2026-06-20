@@ -238,11 +238,7 @@ describe("applySeed onConflict modes", () => {
 
 			const row = await db
 				.selectFrom("_emdash_fields")
-				.innerJoin(
-					"_emdash_collections",
-					"_emdash_collections.id",
-					"_emdash_fields.collection_id",
-				)
+				.innerJoin("_emdash_collections", "_emdash_collections.id", "_emdash_fields.collection_id")
 				.select(["_emdash_fields.type as type", "_emdash_fields.column_type as columnType"])
 				.where("_emdash_collections.slug", "=", "posts")
 				.where("_emdash_fields.slug", "=", "title")
@@ -268,11 +264,7 @@ describe("applySeed onConflict modes", () => {
 			// Stored metadata is untouched (no silent rewrite).
 			const row = await db
 				.selectFrom("_emdash_fields")
-				.innerJoin(
-					"_emdash_collections",
-					"_emdash_collections.id",
-					"_emdash_fields.collection_id",
-				)
+				.innerJoin("_emdash_collections", "_emdash_collections.id", "_emdash_fields.collection_id")
 				.select(["_emdash_fields.type as type", "_emdash_fields.column_type as columnType"])
 				.where("_emdash_collections.slug", "=", "posts")
 				.where("_emdash_fields.slug", "=", "body")
