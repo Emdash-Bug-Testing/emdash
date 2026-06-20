@@ -28,7 +28,8 @@ import {
 	createUrlHelper,
 	createUserAccess,
 } from "../../../src/plugins/context.js";
-import type { ResolvedPlugin } from "../../../src/plugins/types.js";
+import type { MediaAccessWithWrite, ResolvedPlugin } from "../../../src/plugins/types.js";
+import type { Storage } from "../../../src/storage/types.js";
 
 // Test regex patterns
 const NOT_ALLOWED_FETCH_REGEX = /not allowed to fetch from host/;
@@ -720,6 +721,99 @@ describe("Capability Enforcement Integration (v2)", () => {
 
 			const ctx = factory.createContext(plugin);
 			expect(ctx.users).toBeUndefined();
+		});
+	});
+
+	describe("Media Access write gate (#1313)", () => {
+		// Minimal in-memory storage stub. createMediaAccessWithWrite.upload()
+		// only touches storage.upload()/storage.delete(), so a partial stub is
+		// sufficient; cast to Storage to satisfy the factory option type.
+		function createMemoryStorage(): Storage {
+			const store = new Map<string, Uint8Array>();
+			return {
+				async upload(opts: { key: string; body: Uint8Array }) {
+					store.set(opts.key, opts.body);
+				},
+				async delete(key: string) {
+					store.delete(key);
+				},
+				async exists(key: string) {
+					return store.has(key);
+				},
+				// eslint-disable-next-line typescript/no-unsafe-type-assertion -- partial stub for tests
+			} as unknown as Storage;
+		}
+
+		it("grants write media (upload/delete) when storage is configured without getUploadUrl", () => {
+			// Regression for #1313: the R2 Worker binding provides storage but no
+			// presigned-URL support, so getUploadUrl is never set. upload() only
+			// needs storage, so media:write must still expose write access.
+			const factory = new PluginContextFactory({ db, storage: createMemoryStorage() });
+
+			const plugin = createTestPlugin({
+				id: "uploader",
+				capabilities: ["media:write", "media:read"],
+			});
+			const ctx = factory.createContext(plugin);
+
+			expect(ctx.media).toBeDefined();
+			const media = ctx.media as MediaAccessWithWrite;
+			expect(typeof media.upload).toBe("function");
+			expect(typeof media.delete).toBe("function");
+		});
+
+		it("upload() persists bytes through the configured storage backend", async () => {
+			const factory = new PluginContextFactory({ db, storage: createMemoryStorage() });
+			const plugin = createTestPlugin({ id: "uploader", capabilities: ["media:write"] });
+			const ctx = factory.createContext(plugin);
+
+			const media = ctx.media as MediaAccessWithWrite;
+			const result = await media.upload(
+				"memory.jpg",
+				"image/jpeg",
+				new Uint8Array([1, 2, 3]).buffer,
+			);
+
+			expect(result.storageKey).toMatch(/\.jpg$/);
+			expect(result.url).toBe(`/_emdash/api/media/file/${result.storageKey}`);
+		});
+
+		it("getUploadUrl() throws a clear error when no presign provider is configured", async () => {
+			const factory = new PluginContextFactory({ db, storage: createMemoryStorage() });
+			const plugin = createTestPlugin({ id: "uploader", capabilities: ["media:write"] });
+			const ctx = factory.createContext(plugin);
+
+			const media = ctx.media as MediaAccessWithWrite;
+			await expect(media.getUploadUrl("x.jpg", "image/jpeg")).rejects.toThrow(/not support/i);
+		});
+
+		it("still grants write media when getUploadUrl is configured (existing behavior)", () => {
+			const factory = new PluginContextFactory({
+				db,
+				getUploadUrl: async () => ({ uploadUrl: "http://example.com/upload", mediaId: "m1" }),
+			});
+			const plugin = createTestPlugin({ id: "uploader", capabilities: ["media:write"] });
+			const ctx = factory.createContext(plugin);
+
+			expect(ctx.media).toBeDefined();
+			expect(typeof (ctx.media as MediaAccessWithWrite).upload).toBe("function");
+		});
+
+		it("provides read-only media for media:read", () => {
+			const factory = new PluginContextFactory({ db });
+			const plugin = createTestPlugin({ id: "reader", capabilities: ["media:read"] });
+			const ctx = factory.createContext(plugin);
+
+			expect(ctx.media).toBeDefined();
+			expect("upload" in ctx.media!).toBe(false);
+		});
+
+		it("provides no media when media:write has neither storage, getUploadUrl, nor read", () => {
+			const factory = new PluginContextFactory({ db });
+			const plugin = createTestPlugin({ id: "none", capabilities: ["media:write"] });
+			const ctx = factory.createContext(plugin);
+
+			expect(ctx.media).toBeUndefined();
 		});
 	});
 

@@ -432,14 +432,20 @@ export function createMediaAccess(db: Kysely<Database>): MediaAccess {
 
 /**
  * Create full media access with write operations.
- * If storage is not provided, upload() will throw at call time.
+ *
+ * `getUploadUrlFn` is optional: when omitted (e.g. the R2 Worker binding has no
+ * presigned-URL support), getUploadUrl() throws at call time but upload() and
+ * delete() remain available. If `storage` is not provided, upload() throws at
+ * call time. See #1313.
  */
 export function createMediaAccessWithWrite(
 	db: Kysely<Database>,
-	getUploadUrlFn: (
-		filename: string,
-		contentType: string,
-	) => Promise<{ uploadUrl: string; mediaId: string }>,
+	getUploadUrlFn:
+		| ((
+				filename: string,
+				contentType: string,
+		  ) => Promise<{ uploadUrl: string; mediaId: string }>)
+		| undefined,
 	storage?: Storage,
 ): MediaAccessWithWrite {
 	const mediaRepo = new MediaRepository(db);
@@ -448,7 +454,15 @@ export function createMediaAccessWithWrite(
 	return {
 		...readAccess,
 
-		getUploadUrl: getUploadUrlFn,
+		getUploadUrl:
+			getUploadUrlFn ??
+			(async (): Promise<{ uploadUrl: string; mediaId: string }> => {
+				throw new Error(
+					"getUploadUrl() is not supported by the configured storage backend " +
+						"(e.g. the R2 Worker binding does not support presigned URLs). " +
+						"Use media.upload() instead.",
+				);
+			}),
 
 		async upload(
 			filename: string,
@@ -842,8 +856,10 @@ export interface PluginContextFactoryOptions {
 	 */
 	storage?: Storage;
 	/**
-	 * Function to generate upload URLs for media.
-	 * If not provided, media write operations will throw.
+	 * Function to generate presigned upload URLs for media.
+	 * Optional: if omitted but `storage` is configured, media write operations
+	 * still work via direct uploads (media.upload()); only media.getUploadUrl()
+	 * throws. See #1313.
 	 */
 	getUploadUrl?: (
 		filename: string,
@@ -923,8 +939,14 @@ export class PluginContextFactory {
 		}
 
 		// Capability-gated: media
+		//
+		// media:write grants write access whenever the plugin can actually write —
+		// i.e. when EITHER a presigned-URL provider (getUploadUrl) OR a direct
+		// storage backend is configured. The R2 Worker binding provides storage
+		// but no presigned URLs, so gating solely on getUploadUrl wrongly stripped
+		// upload()/delete() from plugins on that adapter (#1313).
 		let media: MediaAccess | MediaAccessWithWrite | undefined;
-		if (capabilities.has("media:write") && this.getUploadUrl) {
+		if (capabilities.has("media:write") && (this.getUploadUrl || this.storage)) {
 			media = createMediaAccessWithWrite(this.db, this.getUploadUrl, this.storage);
 		} else if (capabilities.has("media:read")) {
 			media = createMediaAccess(this.db);
