@@ -153,8 +153,10 @@ export async function exportSeed(db: Kysely<Database>, withContent?: string): Pr
 
 	// 7. Export content (if requested)
 	if (withContent !== undefined) {
+		// `""`, `"true"` (bare `--with-content`) and the documented `"all"` all
+		// mean "every collection"; anything else is a comma-separated allowlist.
 		const collections =
-			withContent === "" || withContent === "true"
+			withContent === "" || withContent === "true" || withContent === "all"
 				? null // all collections
 				: withContent
 						.split(",")
