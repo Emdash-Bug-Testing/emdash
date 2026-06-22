@@ -287,6 +287,19 @@ function convertHtmlBlock(node: ProseMirrorNode): PortableTextHtmlBlock {
 /**
  * Convert image to Portable Text
  */
+const VALID_IMAGE_ALIGNMENTS = ["left", "center", "right", "wide", "full"] as const;
+type ImageAlignment = (typeof VALID_IMAGE_ALIGNMENTS)[number];
+
+function isImageAlignment(value: unknown): value is ImageAlignment {
+	return typeof value === "string" && (VALID_IMAGE_ALIGNMENTS as readonly string[]).includes(value);
+}
+
+/** Read a valid image alignment off a ProseMirror image node, if present. */
+function extractImageAlignment(node: ProseMirrorNode): ImageAlignment | undefined {
+	const value = node.attrs?.alignment;
+	return isImageAlignment(value) ? value : undefined;
+}
+
 function convertImage(node: ProseMirrorNode): PortableTextImageBlock {
 	const attrs = node.attrs;
 	const provider = typeof attrs?.provider === "string" ? attrs.provider : undefined;
@@ -316,6 +329,7 @@ function convertImage(node: ProseMirrorNode): PortableTextImageBlock {
 		height: height || undefined,
 		displayWidth: displayWidth || undefined,
 		displayHeight: displayHeight || undefined,
+		alignment: extractImageAlignment(node),
 	};
 }
 

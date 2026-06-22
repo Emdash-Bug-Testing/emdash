@@ -67,6 +67,8 @@ export interface PortableTextImageBlock {
 	displayWidth?: number;
 	/** Display height for this instance (overrides original) */
 	displayHeight?: number;
+	/** Horizontal alignment (e.g. captured from a WordPress/Gutenberg import). */
+	alignment?: "left" | "center" | "right" | "wide" | "full";
 }
 
 /**

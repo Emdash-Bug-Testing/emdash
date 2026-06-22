@@ -410,6 +410,7 @@ function convertImage(block: PortableTextImageBlock): ProseMirrorNode {
 			height: block.height,
 			displayWidth: block.displayWidth,
 			displayHeight: block.displayHeight,
+			alignment: block.alignment,
 		},
 	};
 }
@@ -434,6 +435,8 @@ function convertMalformedImage(block: PortableTextBlock): ProseMirrorNode {
 		"displayHeight" in block && typeof block.displayHeight === "number"
 			? block.displayHeight
 			: undefined;
+	const alignment =
+		"alignment" in block && typeof block.alignment === "string" ? block.alignment : undefined;
 	return {
 		type: "image",
 		attrs: {
@@ -446,6 +449,7 @@ function convertMalformedImage(block: PortableTextBlock): ProseMirrorNode {
 			height,
 			displayWidth,
 			displayHeight,
+			alignment,
 		},
 	};
 }

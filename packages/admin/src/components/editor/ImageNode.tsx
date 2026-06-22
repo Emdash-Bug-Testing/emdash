@@ -325,6 +325,10 @@ export const ImageExtension = Node.create({
 			displayHeight: {
 				default: null,
 			},
+			/** Horizontal alignment (e.g. preserved from a WordPress/Gutenberg import). */
+			alignment: {
+				default: null,
+			},
 		};
 	},
 
