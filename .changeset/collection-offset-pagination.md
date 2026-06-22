@@ -9,9 +9,9 @@ Adds offset pagination to `getEmDashCollection` for numbered archive routes
 ```ts
 const perPage = 20;
 const { entries, hasMore } = await getEmDashCollection("posts", {
-  limit: perPage,
-  offset: (page - 1) * perPage,
-  orderBy: { published_at: "desc" },
+	limit: perPage,
+	offset: (page - 1) * perPage,
+	orderBy: { published_at: "desc" },
 });
 ```
 

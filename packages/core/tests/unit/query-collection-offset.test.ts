@@ -88,7 +88,7 @@ describe("getEmDashCollection offset pagination", () => {
 		expect(result.hasMore).toBeUndefined();
 	});
 
-	it("keeps offset out of the request-cache key so different pages don't collide", async () => {
+	it("includes offset in the request-cache key so distinct pages don't collide", async () => {
 		vi.mocked(getLiveCollection)
 			.mockResolvedValueOnce({ entries: makeEntries(20), cacheHint: {} } as any)
 			.mockResolvedValueOnce({ entries: makeEntries(20), cacheHint: {} } as any);
