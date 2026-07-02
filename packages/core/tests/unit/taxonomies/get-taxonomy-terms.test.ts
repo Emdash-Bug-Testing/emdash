@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 
+import { ContentRepository } from "../../../src/database/repositories/content.js";
 import { TaxonomyRepository } from "../../../src/database/repositories/taxonomy.js";
 import {
 	describeEachDialect,
@@ -9,9 +10,12 @@ import {
 } from "../../utils/test-db.js";
 
 // Mock loader.getDb so the runtime taxonomy functions read from our test db.
-vi.mock("../../../src/loader.js", () => ({
-	getDb: vi.fn(),
-}));
+// buildStatusCondition is the real implementation -- only getDb needs stubbing.
+vi.mock("../../../src/loader.js", async () => {
+	const actual =
+		await vi.importActual<typeof import("../../../src/loader.js")>("../../../src/loader.js");
+	return { ...actual, getDb: vi.fn() };
+});
 
 import { getDb } from "../../../src/loader.js";
 import { getTaxonomyTerms, invalidateTermCache } from "../../../src/taxonomies/index.js";
@@ -19,10 +23,12 @@ import { getTaxonomyTerms, invalidateTermCache } from "../../../src/taxonomies/i
 describeEachDialect("getTaxonomyTerms", (dialect) => {
 	let ctx: DialectTestContext;
 	let taxRepo: TaxonomyRepository;
+	let contentRepo: ContentRepository;
 
 	beforeEach(async () => {
 		ctx = await setupForDialectWithCollections(dialect);
 		taxRepo = new TaxonomyRepository(ctx.db);
+		contentRepo = new ContentRepository(ctx.db);
 		vi.mocked(getDb).mockResolvedValue(ctx.db);
 		invalidateTermCache();
 	});
@@ -63,5 +69,30 @@ describeEachDialect("getTaxonomyTerms", (dialect) => {
 
 		expect(terms).toHaveLength(1);
 		expect(terms[0].description).toBe("All things tech");
+	});
+
+	it("excludes draft entries from the term count (#581)", async () => {
+		const term = await taxRepo.create({ name: "category", slug: "tech", label: "Technology" });
+
+		const published = await contentRepo.create({
+			type: "post",
+			slug: "published-post",
+			status: "published",
+			data: { title: "Published" },
+		});
+		await taxRepo.attachToEntry("post", published.id, term.id);
+
+		const draft = await contentRepo.create({
+			type: "post",
+			slug: "draft-post",
+			status: "draft",
+			data: { title: "Draft" },
+		});
+		await taxRepo.attachToEntry("post", draft.id, term.id);
+
+		const terms = await getTaxonomyTerms("category");
+
+		expect(terms).toHaveLength(1);
+		expect(terms[0].count).toBe(1);
 	});
 });

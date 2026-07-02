@@ -11,8 +11,11 @@
  * the right per-locale term.
  */
 
+import { sql } from "kysely";
+
+import { validateIdentifier } from "../database/validate.js";
 import { resolveLocale, resolveLocaleChain } from "../i18n/resolve.js";
-import { getDb, resetTaxonomyNamesCache } from "../loader.js";
+import { buildStatusCondition, getDb, resetTaxonomyNamesCache } from "../loader.js";
 import {
 	cachedQuery,
 	CacheNamespace,
@@ -282,22 +285,55 @@ async function loadTaxonomyTerms(
 }
 
 /**
- * Per-translation-group usage counts across all taxonomies, in one aggregate
- * scan of `content_taxonomies`. Counts are locale-independent (the pivot stores
+ * Per-translation-group usage counts across all taxonomies, counting only
+ * published (or scheduled-and-past-due) entries so unpublished drafts don't
+ * inflate the counts shown in term widgets (#581). `content_taxonomies` has
+ * no FK to the per-collection `ec_*` tables that hold `status`, so this joins
+ * against each distinct collection present in the pivot separately and sums
+ * the results. Counts are locale-independent (the pivot stores
  * translation_group), so a single request-cached entry serves every taxonomy
  * that renders during the request.
  */
 function getTaxonomyTermCounts(): Promise<Map<string, number>> {
 	return requestCached("taxonomy-term-counts", async () => {
 		const db = await getDb();
-		const countsResult = await db
-			.selectFrom("content_taxonomies")
-			.select(["taxonomy_id"])
-			.select((eb) => eb.fn.count<number>("entry_id").as("count"))
-			.groupBy("taxonomy_id")
-			.execute();
 		const counts = new Map<string, number>();
-		for (const row of countsResult) counts.set(row.taxonomy_id, row.count);
+
+		const collectionRows = await db
+			.selectFrom("content_taxonomies")
+			.select("collection")
+			.distinct()
+			.execute();
+
+		await Promise.all(
+			collectionRows.map(async ({ collection }) => {
+				try {
+					validateIdentifier(collection, "content_taxonomies collection");
+				} catch {
+					return;
+				}
+
+				const statusCondition = buildStatusCondition(db, "published", "c");
+				let rows;
+				try {
+					rows = await sql<{ taxonomy_id: string; count: number }>`
+						SELECT ct.taxonomy_id AS taxonomy_id, COUNT(*) AS count
+						FROM content_taxonomies ct
+						JOIN ${sql.ref(`ec_${collection}`)} c ON c.id = ct.entry_id
+						WHERE ct.collection = ${collection} AND ${statusCondition}
+						GROUP BY ct.taxonomy_id
+					`.execute(db);
+				} catch (error) {
+					if (isMissingTableError(error)) return;
+					throw error;
+				}
+
+				for (const row of rows.rows) {
+					counts.set(row.taxonomy_id, (counts.get(row.taxonomy_id) ?? 0) + Number(row.count));
+				}
+			}),
+		);
+
 		return counts;
 	});
 }

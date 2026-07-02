@@ -521,7 +521,7 @@ export type OrderBySpec = Record<string, SortDirection>;
  * whose scheduled_at time has passed (treating it as effectively published).
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- accepts any Kysely instance
-function buildStatusCondition(
+export function buildStatusCondition(
 	db: Kysely<any>,
 	status: string,
 	tablePrefix?: string,
