@@ -15,19 +15,37 @@
 import type { RegistryConfigInput } from "../../registry/types.js";
 import type { StorageDescriptor } from "../storage/types.js";
 
+/** Entrypoint constant used by the `s3()` adapter (see `astro/storage/adapters.ts`). */
+const S3_ADAPTER_ENTRYPOINT = "emdash/storage/s3";
+
 /**
  * Storage entrypoints are free to shape their config however they like, so
  * `endpoint` isn't a known field on `StorageDescriptor["config"]` -- only
  * S3-compatible adapters (R2, S3, Minio, ...) set it. Anything else (e.g.
  * local filesystem storage) simply has no `endpoint` to allow.
+ *
+ * The `s3()` adapter resolves any field omitted from its config -- including
+ * `endpoint` -- from the matching `S3_*` env var at runtime (see
+ * `storage/s3.ts`'s `resolveS3Config`). A site configured as `s3({ ... })`
+ * with only `S3_ENDPOINT` set has no `endpoint` in the descriptor's config,
+ * so fall back to that env var for S3-adapter storage before giving up.
  */
 export function getConfiguredStorageEndpoint(
 	storage: StorageDescriptor | undefined,
 ): string | undefined {
 	const config = storage?.config;
-	if (typeof config !== "object" || config === null || !("endpoint" in config)) return undefined;
-	const endpoint = config.endpoint;
-	return typeof endpoint === "string" ? endpoint : undefined;
+	if (typeof config === "object" && config !== null && "endpoint" in config) {
+		const endpoint = config.endpoint;
+		if (typeof endpoint === "string") return endpoint;
+	}
+
+	if (storage?.entrypoint === S3_ADAPTER_ENTRYPOINT) {
+		const envEndpoint =
+			typeof process !== "undefined" && process.env ? process.env.S3_ENDPOINT : undefined;
+		if (envEndpoint) return envEndpoint;
+	}
+
+	return undefined;
 }
 
 function getRegistryAggregatorOrigin(
