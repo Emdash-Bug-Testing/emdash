@@ -635,6 +635,7 @@ export async function handleContentCreate(
 		status?: string;
 		authorId?: string;
 		bylines?: ContentBylineInput[];
+		taxonomies?: Record<string, string[]>;
 		locale?: string;
 		translationOf?: string;
 		seo?: ContentSeoInput;
@@ -726,6 +727,14 @@ export async function handleContentCreate(
 				}
 			}
 
+			// Explicit body.taxonomies wins per taxonomy name over whatever
+			// copyEntryTerms just inherited from the translation source.
+			if (body.taxonomies !== undefined) {
+				const { TaxonomyRepository } = await import("../../database/repositories/taxonomy.js");
+				const taxRepo = new TaxonomyRepository(trx);
+				await taxRepo.setTaxonomiesForEntry(collection, created.id, body.taxonomies);
+			}
+
 			await hydrateBylines(trx, collection, created);
 
 			// Side-write SEO data if provided
@@ -813,6 +822,7 @@ export async function handleContentUpdate(
 		status?: string;
 		authorId?: string | null;
 		bylines?: ContentBylineInput[];
+		taxonomies?: Record<string, string[]>;
 		locale?: string;
 		_rev?: string;
 		seo?: ContentSeoInput;
@@ -891,6 +901,12 @@ export async function handleContentUpdate(
 				// pointer from the persisted credit so the response shape
 				// matches the DB. See the matching block in handleContentCreate.
 				updated.primaryBylineId = credits[0]?.byline.translationGroup ?? null;
+			}
+
+			if (body.taxonomies !== undefined) {
+				const { TaxonomyRepository } = await import("../../database/repositories/taxonomy.js");
+				const taxRepo = new TaxonomyRepository(trx);
+				await taxRepo.setTaxonomiesForEntry(collection, resolvedId, body.taxonomies);
 			}
 
 			// Create auto-redirect when slug changes

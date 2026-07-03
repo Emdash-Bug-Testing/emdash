@@ -2538,6 +2538,7 @@ export class EmDashRuntime {
 			status?: string;
 			authorId?: string;
 			bylines?: Array<{ bylineId: string; roleLabel?: string | null }>;
+			taxonomies?: Record<string, string[]>;
 			locale?: string;
 			translationOf?: string;
 		},
@@ -2597,6 +2598,7 @@ export class EmDashRuntime {
 			status?: string;
 			authorId?: string | null;
 			bylines?: Array<{ bylineId: string; roleLabel?: string | null }>;
+			taxonomies?: Record<string, string[]>;
 			seo?: {
 				title?: string | null;
 				description?: string | null;

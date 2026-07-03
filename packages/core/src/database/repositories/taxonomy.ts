@@ -358,6 +358,41 @@ export class TaxonomyRepository {
 		if (toRemove.length > 0 || toAdd.length > 0) invalidateTaxonomyObjectCache();
 	}
 
+	/**
+	 * Resolve a term reference within a taxonomy to its translation_group.
+	 * Accepts either a term id/translation_group (matched globally, same as
+	 * `resolveTranslationGroup`) or a slug (matched scoped to `taxonomyName`,
+	 * since slugs are only unique per-taxonomy). Returns null if neither matches.
+	 */
+	async resolveTermRef(taxonomyName: string, idOrSlug: string): Promise<string | null> {
+		const group = await this.resolveTranslationGroup(idOrSlug);
+		if (group) return group;
+		const bySlug = await this.findBySlug(taxonomyName, idOrSlug);
+		return bySlug ? (bySlug.translationGroup ?? bySlug.id) : null;
+	}
+
+	/**
+	 * Replace term assignments across multiple taxonomies for one content
+	 * entry, keyed by taxonomy name (e.g. `{ category: ["porady"], tag: ["ai", "seo"] }`).
+	 * Each ref may be a term id or a slug. Taxonomy names/refs that don't
+	 * resolve are silently skipped, matching `setTermsForEntry`'s existing
+	 * lenient handling of unresolvable ids.
+	 */
+	async setTaxonomiesForEntry(
+		collection: string,
+		entryId: string,
+		taxonomies: Record<string, string[]>,
+	): Promise<void> {
+		for (const [taxonomyName, refs] of Object.entries(taxonomies)) {
+			const resolved: string[] = [];
+			for (const ref of refs) {
+				const group = await this.resolveTermRef(taxonomyName, ref);
+				if (group) resolved.push(group);
+			}
+			await this.setTermsForEntry(collection, entryId, taxonomyName, resolved);
+		}
+	}
+
 	async clearEntryTerms(collection: string, entryId: string): Promise<number> {
 		const result = await this.db
 			.deleteFrom("content_taxonomies")

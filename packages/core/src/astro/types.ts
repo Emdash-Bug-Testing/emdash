@@ -266,6 +266,7 @@ export interface EmDashHandlers {
 			status?: string;
 			authorId?: string;
 			bylines?: Array<{ bylineId: string; roleLabel?: string | null }>;
+			taxonomies?: Record<string, string[]>;
 			locale?: string;
 			translationOf?: string;
 			createdAt?: string | null;
@@ -282,6 +283,7 @@ export interface EmDashHandlers {
 			status?: string;
 			authorId?: string | null;
 			bylines?: Array<{ bylineId: string; roleLabel?: string | null }>;
+			taxonomies?: Record<string, string[]>;
 			locale?: string;
 			seo?: {
 				title?: string | null;
