@@ -247,6 +247,48 @@ describe("MenuEditor", () => {
 		expect(screen.getByRole("option", { name: "Home", exact: true }).query()).toBeNull();
 	});
 
+	it("edit dialog's Parent select excludes descendants to prevent cycles", async () => {
+		vi.mocked(api.fetchMenu).mockResolvedValue({
+			...defaultMenu,
+			items: [
+				...defaultMenu.items,
+				{
+					id: "3",
+					menuId: "menu1",
+					parentId: "1",
+					sortOrder: 0,
+					type: "custom",
+					referenceCollection: null,
+					referenceId: null,
+					customUrl: "/services",
+					label: "Services",
+					titleAttr: null,
+					target: "_self",
+					cssClasses: null,
+					createdAt: "",
+					locale: "en",
+					translationGroup: "3",
+				},
+			],
+		});
+
+		const screen = await render(<MenuEditor />, { wrapper: Wrapper });
+
+		await expect.element(screen.getByText("Home")).toBeInTheDocument();
+		// Home is the first row; editing it must exclude its own child (Services)
+		// from the Parent options, not just itself.
+		await screen.getByRole("button", { name: "Edit" }).first().click();
+
+		await expect
+			.element(screen.getByRole("heading", { name: "Edit Menu Item" }))
+			.toBeInTheDocument();
+		screen.getByRole("combobox", { name: "Parent" }).element().click();
+
+		await expect.element(screen.getByRole("option", { name: "About" })).toBeInTheDocument();
+		expect(screen.getByRole("option", { name: "Home", exact: true }).query()).toBeNull();
+		expect(screen.getByRole("option", { name: "Services", exact: true }).query()).toBeNull();
+	});
+
 	it("renders nested items indented under their parent", async () => {
 		vi.mocked(api.fetchMenu).mockResolvedValue({
 			...defaultMenu,
