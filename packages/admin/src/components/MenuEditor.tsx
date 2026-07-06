@@ -331,7 +331,7 @@ export function MenuEditor() {
 				.filter(({ item }) => !excluded.has(item.id))
 				.map(({ item, depth }) => ({
 					value: item.id,
-					label: `${"— ".repeat(depth)}${item.label}`,
+					label: <span style={{ marginInlineStart: `${depth * 1.5}rem` }}>{item.label}</span>,
 				})),
 		];
 	}, [editingItem, localItems, t]);
