@@ -364,24 +364,8 @@ export class FTSManager {
 	 * without a title field raise "no such column: c.title" (#1178).
 	 */
 	async hasTitleColumn(collectionSlug: string): Promise<boolean> {
-		const collection = await this.db
-			.selectFrom("_emdash_collections")
-			.select("id")
-			.where("slug", "=", collectionSlug)
-			.executeTakeFirst();
-
-		if (!collection) {
-			return false;
-		}
-
-		const field = await this.db
-			.selectFrom("_emdash_fields")
-			.select("slug")
-			.where("collection_id", "=", collection.id)
-			.where("slug", "=", "title")
-			.executeTakeFirst();
-
-		return field !== undefined;
+		const withTitle = await this.getCollectionsWithTitleColumn([collectionSlug]);
+		return withTitle.has(collectionSlug);
 	}
 
 	/**
