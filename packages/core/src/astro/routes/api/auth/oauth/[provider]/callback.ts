@@ -125,8 +125,7 @@ export const GET: APIRoute = async ({ params, request, locals, session, redirect
 		const { env: cfEnv } = (await import("virtual:emdash/env")) as {
 			env?: Record<string, unknown>;
 		};
-		// eslint-disable-next-line typescript/no-unsafe-type-assertion -- import.meta.env is typed as ImportMetaEnv but we need Record<string, unknown> for getOAuthConfig
-		const env = cfEnv ?? (import.meta.env as Record<string, unknown>);
+		const env = cfEnv ?? import.meta.env;
 		const providers = getOAuthConfig(env);
 
 		if (!providers[provider]) {
