@@ -14,7 +14,9 @@ concurrency:
 jobs:
   extract:
     name: Extract
-    if: github.actor != 'emdashbot[bot]'
+    # Guard: needs upstream emdash-cms's APP_ID/APP_PRIVATE_KEY secrets,
+    # which forks don't have. Skip on forks instead of failing.
+    if: github.actor != 'emdashbot[bot]' && github.repository == 'emdash-cms/emdash'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
