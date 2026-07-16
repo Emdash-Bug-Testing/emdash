@@ -251,6 +251,9 @@ jobs:
 
   test-e2e-cloudflare:
     name: E2E Cloudflare (${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+    # Disabled on this fork: Cloudflare bot/credentials were removed, job
+    # can't build (missing packages/core/dist/cli/index.mjs) or run.
+    if: false
     runs-on: ubuntu-latest
     timeout-minutes: 25
     strategy:
