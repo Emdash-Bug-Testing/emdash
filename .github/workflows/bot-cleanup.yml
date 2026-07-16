@@ -10,9 +10,11 @@ name: Bot Cleanup
 on:
   issues:
     types: [closed]
-  schedule:
-    # 04:00 UTC daily. Off-peak for most contributors.
-    - cron: "0 4 * * *"
+  # schedule disabled on this fork: workflow targets emdash-cms/emdash
+  # directly and needs upstream's APP_ID/APP_PRIVATE_KEY, which this
+  # fork doesn't have. Daily cron was failing every run.
+  # schedule:
+  #   - cron: "0 4 * * *"
 
 permissions:
   contents: read
