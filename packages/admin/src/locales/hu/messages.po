@@ -738,7 +738,7 @@ msgstr "Almező hozzáadása"
 msgid "Add tags..."
 msgstr "Címkék hozzáadása..."
 
-#: packages/admin/src/components/Widgets.tsx:338
+#: packages/admin/src/components/Widgets.tsx:398
 msgid "Add Widget Area"
 msgstr "Widgetterület hozzáadása"
 
@@ -957,7 +957,7 @@ msgstr "Bármilyen médiatípus engedélyezett (a globális korlátokon belül).
 msgid "API Tokens"
 msgstr "API tokenek"
 
-#: packages/admin/src/components/Widgets.tsx:375
+#: packages/admin/src/components/Widgets.tsx:435
 msgid "Appears on posts and pages"
 msgstr "Bejegyzéseken és oldalakon jelenik meg"
 
@@ -1007,6 +1007,7 @@ msgid "Archived"
 msgstr "Archiválva"
 
 #: packages/admin/src/components/AllowedTypesEditor.tsx:65
+#: packages/admin/src/components/Widgets.tsx:156
 msgid "Archives"
 msgstr "Archívumok"
 
@@ -1141,7 +1142,7 @@ msgstr "Elérhető média"
 msgid "Available Providers"
 msgstr "Elérhető szolgáltatók"
 
-#: packages/admin/src/components/Widgets.tsx:401
+#: packages/admin/src/components/Widgets.tsx:461
 msgid "Available Widgets"
 msgstr "Elérhető widgetek"
 
@@ -1366,7 +1367,7 @@ msgstr "Tartalmat tekinthet meg"
 #: packages/admin/src/components/TaxonomyManager.tsx:472
 #: packages/admin/src/components/TaxonomyManager.tsx:686
 #: packages/admin/src/components/users/InviteUserModal.tsx:198
-#: packages/admin/src/components/Widgets.tsx:386
+#: packages/admin/src/components/Widgets.tsx:446
 #: packages/admin/src/components/WordPressImport.tsx:1917
 msgid "Cancel"
 msgstr "Mégse"
@@ -1411,6 +1412,7 @@ msgid "Captions / Subtitles"
 msgstr "Feliratok"
 
 #: packages/admin/src/components/AdminCommandPalette.tsx:193
+#: packages/admin/src/components/Widgets.tsx:133
 msgid "Categories"
 msgstr "Kategóriák"
 
@@ -1581,9 +1583,9 @@ msgstr "A bejelentkezéshez kattints az e-mailben lévő linkre."
 #: packages/admin/src/components/users/InviteUserModal.tsx:94
 #: packages/admin/src/components/users/InviteUserModal.tsx:98
 #: packages/admin/src/components/WelcomeModal.tsx:54
-#: packages/admin/src/components/Widgets.tsx:348
-#: packages/admin/src/components/Widgets.tsx:354
-#: packages/admin/src/components/Widgets.tsx:358
+#: packages/admin/src/components/Widgets.tsx:408
+#: packages/admin/src/components/Widgets.tsx:414
+#: packages/admin/src/components/Widgets.tsx:418
 msgid "Close"
 msgstr "Bezárás"
 
@@ -1666,7 +1668,7 @@ msgstr "A bejelentkezett CMS-felhasználók hozzászólásai automatikusan jóv�
 msgid "Complete signup"
 msgstr "Regisztráció befejezése"
 
-#: packages/admin/src/components/Widgets.tsx:849
+#: packages/admin/src/components/Widgets.tsx:914
 msgid "Component"
 msgstr "Komponens"
 
@@ -1708,7 +1710,7 @@ msgstr "Kapcsolódva: {0}"
 #: packages/admin/src/components/PortableTextEditor.tsx:2208
 #: packages/admin/src/components/SectionEditor.tsx:193
 #: packages/admin/src/components/Sidebar.tsx:451
-#: packages/admin/src/components/Widgets.tsx:817
+#: packages/admin/src/components/Widgets.tsx:882
 msgid "Content"
 msgstr "Tartalom"
 
@@ -1875,7 +1877,7 @@ msgstr "Darab"
 #: packages/admin/src/components/Redirects.tsx:191
 #: packages/admin/src/components/Sections.tsx:212
 #: packages/admin/src/components/TaxonomyManager.tsx:479
-#: packages/admin/src/components/Widgets.tsx:389
+#: packages/admin/src/components/Widgets.tsx:449
 #: packages/admin/src/routes/bylines.tsx:580
 msgid "Create"
 msgstr "Létrehozás"
@@ -1981,7 +1983,7 @@ msgstr "Taxonómia létrehozása"
 msgid "Create Token"
 msgstr "Token létrehozása"
 
-#: packages/admin/src/components/Widgets.tsx:345
+#: packages/admin/src/components/Widgets.tsx:405
 msgid "Create Widget Area"
 msgstr "Widgetterület létrehozása"
 
@@ -2196,7 +2198,7 @@ msgstr "Kódban definiálva"
 #: packages/admin/src/components/Sections.tsx:407
 #: packages/admin/src/components/settings/BackupSettings.tsx:284
 #: packages/admin/src/components/TaxonomyManager.tsx:886
-#: packages/admin/src/components/Widgets.tsx:634
+#: packages/admin/src/components/Widgets.tsx:699
 #: packages/admin/src/routes/byline-schema.tsx:378
 #: packages/admin/src/routes/bylines.tsx:589
 #: packages/admin/src/routes/bylines.tsx:625
@@ -2216,7 +2218,7 @@ msgstr "Törlöd ezt: \"{0}\"? Ez nem vonható vissza."
 #: packages/admin/src/components/settings/AllowedDomainsSettings.tsx:252
 #: packages/admin/src/components/settings/BackupSettings.tsx:245
 #: packages/admin/src/components/TaxonomyManager.tsx:97
-#: packages/admin/src/components/Widgets.tsx:735
+#: packages/admin/src/components/Widgets.tsx:800
 #: packages/admin/src/routes/byline-schema.tsx:458
 msgid "Delete {0}"
 msgstr "{0} törlése"
@@ -2232,7 +2234,7 @@ msgid "Delete {0} menu"
 msgstr "{0} menü törlése"
 
 #. placeholder {0}: area.label
-#: packages/admin/src/components/Widgets.tsx:582
+#: packages/admin/src/components/Widgets.tsx:647
 msgid "Delete {0} widget area"
 msgstr "{0} widgetterület törlése"
 
@@ -2328,7 +2330,7 @@ msgstr "Törlöd a szakaszt?"
 msgid "Delete table"
 msgstr "Táblázat törlése"
 
-#: packages/admin/src/components/Widgets.tsx:632
+#: packages/admin/src/components/Widgets.tsx:697
 msgid "Delete Widget Area?"
 msgstr "Törlöd a widgetterületet?"
 
@@ -2352,7 +2354,7 @@ msgstr "\"{0}\" törlése az összes szerzői leírásból eltávolítja a hozz�
 #: packages/admin/src/components/Sections.tsx:309
 #: packages/admin/src/components/settings/BackupSettings.tsx:285
 #: packages/admin/src/components/TaxonomyManager.tsx:887
-#: packages/admin/src/components/Widgets.tsx:635
+#: packages/admin/src/components/Widgets.tsx:700
 #: packages/admin/src/routes/bylines.tsx:626
 msgid "Deleting..."
 msgstr "Törlés..."
@@ -2400,7 +2402,7 @@ msgstr "Írd le, mire való ez a szakasz..."
 #: packages/admin/src/components/RegistryPluginDetail.tsx:790
 #: packages/admin/src/components/SectionEditor.tsx:261
 #: packages/admin/src/components/Sections.tsx:200
-#: packages/admin/src/components/Widgets.tsx:373
+#: packages/admin/src/components/Widgets.tsx:433
 msgid "Description"
 msgstr "Leírás"
 
@@ -2514,9 +2516,17 @@ msgstr ""
 msgid "Dismiss"
 msgstr "Bezárás"
 
+#: packages/admin/src/components/Widgets.tsx:125
+msgid "Display a list of recent posts"
+msgstr ""
+
 #: packages/admin/src/components/Widgets.tsx:103
 msgid "Display a navigation menu"
 msgstr "Navigációs menü megjelenítése"
+
+#: packages/admin/src/components/Widgets.tsx:134
+msgid "Display category list"
+msgstr ""
 
 #: packages/admin/src/components/ContentSettingsPanel.tsx:893
 #: packages/admin/src/components/ContentSettingsPanel.tsx:955
@@ -2532,6 +2542,10 @@ msgstr "Az adminfelületen megjelenő név"
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:458
 msgid "Display Size"
 msgstr "Megjelenítési méret"
+
+#: packages/admin/src/components/Widgets.tsx:142
+msgid "Display tag cloud"
+msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:356
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:545
@@ -2641,7 +2655,7 @@ msgstr ""
 msgid "Drag and drop or click to browse (.xml)"
 msgstr "Húzd ide, vagy kattints a tallózáshoz (.xml)"
 
-#: packages/admin/src/components/Widgets.tsx:618
+#: packages/admin/src/components/Widgets.tsx:683
 msgid "Drag here to add"
 msgstr "Húzd ide a hozzáadáshoz"
 
@@ -2652,7 +2666,7 @@ msgstr "Húzd az átrendezéshez"
 #. placeholder {0}: field.label
 #. placeholder {0}: widget.title ?? t`widget`
 #: packages/admin/src/components/ContentTypeEditor.tsx:716
-#: packages/admin/src/components/Widgets.tsx:720
+#: packages/admin/src/components/Widgets.tsx:785
 msgid "Drag to reorder {0}"
 msgstr "Húzd az átrendezéshez: {0}"
 
@@ -2660,15 +2674,15 @@ msgstr "Húzd az átrendezéshez: {0}"
 msgid "Drag to reorder block"
 msgstr "Húzd a blokk átrendezéséhez"
 
-#: packages/admin/src/components/Widgets.tsx:622
+#: packages/admin/src/components/Widgets.tsx:687
 msgid "Drag widgets here to add them"
 msgstr "Húzd ide a widgeteket a hozzáadáshoz"
 
-#: packages/admin/src/components/Widgets.tsx:402
+#: packages/admin/src/components/Widgets.tsx:462
 msgid "Drag widgets into an area to add them"
 msgstr "Húzd a widgeteket egy területre a hozzáadáshoz"
 
-#: packages/admin/src/components/Widgets.tsx:618
+#: packages/admin/src/components/Widgets.tsx:683
 msgid "Drop to add widget"
 msgstr "Engedd el a widget hozzáadásához"
 
@@ -2953,16 +2967,16 @@ msgstr "Add meg a WordPress weboldal URL-jét"
 #: packages/admin/src/components/MenuEditor.tsx:193
 #: packages/admin/src/components/MenuEditor.tsx:233
 #: packages/admin/src/components/SetupWizard.tsx:539
-#: packages/admin/src/components/Widgets.tsx:687
+#: packages/admin/src/components/Widgets.tsx:752
 #: packages/admin/src/router.tsx:2142
 msgid "Error"
 msgstr "Hiba"
 
-#: packages/admin/src/components/Widgets.tsx:174
+#: packages/admin/src/components/Widgets.tsx:234
 msgid "Error adding widget"
 msgstr "Hiba a widget hozzáadásakor"
 
-#: packages/admin/src/components/Widgets.tsx:235
+#: packages/admin/src/components/Widgets.tsx:295
 msgid "Error reordering widgets"
 msgstr "Hiba a widgetek átrendezésekor"
 
@@ -2970,7 +2984,7 @@ msgstr "Hiba a widgetek átrendezésekor"
 msgid "Error saving section"
 msgstr "Hiba a szakasz mentésekor"
 
-#: packages/admin/src/components/Widgets.tsx:702
+#: packages/admin/src/components/Widgets.tsx:767
 msgid "Error updating widget"
 msgstr "Hiba a widget frissítésekor"
 
@@ -3797,6 +3811,10 @@ msgstr "Rácsnézet"
 msgid "Group (optional)"
 msgstr "Kategória (opcionális)"
 
+#: packages/admin/src/components/Widgets.tsx:160
+msgid "Group by"
+msgstr ""
+
 #: packages/admin/src/routes/bylines.tsx:556
 msgid "Guest byline"
 msgstr "Vendég szerző"
@@ -4284,7 +4302,7 @@ msgstr "Kotlin"
 #: packages/admin/src/components/MenuEditor.tsx:593
 #: packages/admin/src/components/MenuList.tsx:166
 #: packages/admin/src/components/TaxonomyManager.tsx:623
-#: packages/admin/src/components/Widgets.tsx:371
+#: packages/admin/src/components/Widgets.tsx:431
 #: packages/admin/src/routes/byline-schema.tsx:234
 msgid "Label"
 msgstr "Címke"
@@ -4374,6 +4392,10 @@ msgstr "világos"
 #: packages/admin/src/components/ThemeToggle.tsx:24
 msgid "Light"
 msgstr "Világos"
+
+#: packages/admin/src/components/Widgets.tsx:163
+msgid "Limit"
+msgstr ""
 
 #: packages/admin/src/components/SignupPage.tsx:257
 msgid "Link expired"
@@ -4489,7 +4511,7 @@ msgstr "Beállítás betöltése..."
 msgid "Loading terms..."
 msgstr "Kifejezések betöltése..."
 
-#: packages/admin/src/components/Widgets.tsx:310
+#: packages/admin/src/components/Widgets.tsx:370
 msgid "Loading widgets..."
 msgstr "Widgetek betöltése..."
 
@@ -4561,7 +4583,7 @@ msgstr "Csak kisbetűk, számok és kötőjelek"
 msgid "Lowercase letters, numbers, and underscores only, starting with a letter"
 msgstr "Csak kisbetűk, számok és aláhúzások, betűvel kezdve"
 
-#: packages/admin/src/components/Widgets.tsx:371
+#: packages/admin/src/components/Widgets.tsx:431
 msgid "Main Sidebar"
 msgstr "Fő oldalsáv"
 
@@ -4589,7 +4611,7 @@ msgstr "{0} kezelése ehhez: {1}"
 msgid "Manage bylines in {entryLocale}"
 msgstr "Szerzői sorok kezelése ezen a nyelven: {entryLocale}"
 
-#: packages/admin/src/components/Widgets.tsx:326
+#: packages/admin/src/components/Widgets.tsx:386
 msgid "Manage content widgets in your widget areas"
 msgstr "Tartalmi widgetek kezelése a widgetterületeken"
 
@@ -4670,6 +4692,10 @@ msgstr "Maximális hossz"
 msgid "Max Value"
 msgstr "Maximális érték"
 
+#: packages/admin/src/components/Widgets.tsx:145
+msgid "Maximum tags"
+msgstr ""
+
 #: packages/admin/src/components/editor/codeBlockLanguages.ts:45
 msgid "MDX"
 msgstr "MDX"
@@ -4721,7 +4747,7 @@ msgid "Medium section heading"
 msgstr "Közepes szakaszcím"
 
 #: packages/admin/src/components/Widgets.tsx:102
-#: packages/admin/src/components/Widgets.tsx:832
+#: packages/admin/src/components/Widgets.tsx:897
 msgid "Menu"
 msgstr "Menü"
 
@@ -4829,6 +4855,14 @@ msgstr "Módosítva"
 msgid "Modify collection schemas"
 msgstr "Gyűjteménysémák módosítása"
 
+#: packages/admin/src/components/Widgets.tsx:161
+msgid "Monthly"
+msgstr ""
+
+#: packages/admin/src/components/Widgets.tsx:157
+msgid "Monthly/yearly archives"
+msgstr ""
+
 #: packages/admin/src/components/MarketplaceBrowse.tsx:42
 msgid "Most Popular"
 msgstr "Legnépszerűbb"
@@ -4908,7 +4942,7 @@ msgstr "My Awesome Blog"
 #: packages/admin/src/components/TaxonomyManager.tsx:821
 #: packages/admin/src/components/ThemeMarketplaceBrowse.tsx:37
 #: packages/admin/src/components/users/UserDetail.tsx:148
-#: packages/admin/src/components/Widgets.tsx:365
+#: packages/admin/src/components/Widgets.tsx:425
 msgid "Name"
 msgstr "Név"
 
@@ -5307,7 +5341,7 @@ msgstr "Nem találhatók a szűrőknek megfelelő felhasználók."
 msgid "No users yet."
 msgstr "Még nincsenek felhasználók."
 
-#: packages/admin/src/components/Widgets.tsx:434
+#: packages/admin/src/components/Widgets.tsx:499
 msgid "No widget areas yet. Create one to get started."
 msgstr "Még nincsenek widgetterületek. Hozz létre egyet a kezdéshez."
 
@@ -5328,6 +5362,10 @@ msgstr "Nem kompatibilis ezzel a környezettel"
 #: packages/admin/src/components/FieldEditor.tsx:581
 msgid "Number"
 msgstr "Szám"
+
+#: packages/admin/src/components/Widgets.tsx:127
+msgid "Number of posts"
+msgstr ""
 
 #: packages/admin/src/components/settings/GeneralSettings.tsx:278
 msgid "Number of posts to show per page on list views"
@@ -5616,6 +5654,10 @@ msgstr "PHP"
 #: packages/admin/src/components/SetupWizard.tsx:290
 msgid "Pick any method to create your admin account."
 msgstr "Válassz bármelyik módszert az adminfiók létrehozásához."
+
+#: packages/admin/src/components/Widgets.tsx:152
+msgid "Placeholder text"
+msgstr ""
 
 #: packages/admin/src/components/auth/PasskeyLogin.tsx:311
 #: packages/admin/src/components/auth/PasskeyRegistration.tsx:310
@@ -5908,6 +5950,10 @@ msgstr "Kész"
 #: packages/admin/src/components/Dashboard.tsx:298
 msgid "Recent Activity"
 msgstr "Legutóbbi tevékenység"
+
+#: packages/admin/src/components/Widgets.tsx:124
+msgid "Recent Posts"
+msgstr ""
 
 #: packages/admin/src/components/MarketplaceBrowse.tsx:43
 #: packages/admin/src/components/ThemeMarketplaceBrowse.tsx:35
@@ -6279,7 +6325,7 @@ msgstr "Azonos ablak"
 #: packages/admin/src/components/Redirects.tsx:190
 #: packages/admin/src/components/SaveButton.tsx:32
 #: packages/admin/src/components/settings/BackupSettings.tsx:192
-#: packages/admin/src/components/Widgets.tsx:892
+#: packages/admin/src/components/Widgets.tsx:966
 #: packages/admin/src/routes/bylines.tsx:580
 msgid "Save"
 msgstr "Mentés"
@@ -6347,7 +6393,7 @@ msgstr "\"{0}\" mentve."
 #: packages/admin/src/components/settings/SocialSettings.tsx:147
 #: packages/admin/src/components/TaxonomyManager.tsx:476
 #: packages/admin/src/components/users/UserDetail.tsx:311
-#: packages/admin/src/components/Widgets.tsx:892
+#: packages/admin/src/components/Widgets.tsx:966
 #: packages/admin/src/routes/bylines.tsx:580
 msgid "Saving..."
 msgstr "Mentés..."
@@ -6452,6 +6498,7 @@ msgid "SCSS"
 msgstr "SCSS"
 
 #: packages/admin/src/components/ContentTypeEditor.tsx:86
+#: packages/admin/src/components/Widgets.tsx:149
 msgid "Search"
 msgstr "Keresés"
 
@@ -6502,6 +6549,10 @@ msgstr "Keresőoptimalizálás"
 #: packages/admin/src/components/Settings.tsx:83
 msgid "Search engine optimization and verification"
 msgstr "Keresőoptimalizálás és ellenőrzés"
+
+#: packages/admin/src/components/Widgets.tsx:150
+msgid "Search form"
+msgstr ""
 
 #: packages/admin/src/components/MediaLibrary.tsx:416
 #: packages/admin/src/components/MediaPickerModal.tsx:578
@@ -6661,11 +6712,11 @@ msgstr "{label} kiválasztása"
 msgid "Select {title}"
 msgstr ""
 
-#: packages/admin/src/components/Widgets.tsx:869
+#: packages/admin/src/components/Widgets.tsx:939
 msgid "Select a component..."
 msgstr "Komponens kiválasztása..."
 
-#: packages/admin/src/components/Widgets.tsx:837
+#: packages/admin/src/components/Widgets.tsx:902
 msgid "Select a menu..."
 msgstr "Menü kiválasztása..."
 
@@ -6885,6 +6936,26 @@ msgstr "Rövid szöveg"
 #: packages/admin/src/components/FieldEditor.tsx:579
 msgid "Short Text"
 msgstr "Rövid szöveg"
+
+#: packages/admin/src/components/Widgets.tsx:144
+msgid "Show count"
+msgstr ""
+
+#: packages/admin/src/components/Widgets.tsx:129
+msgid "Show date"
+msgstr ""
+
+#: packages/admin/src/components/Widgets.tsx:137
+msgid "Show hierarchy"
+msgstr ""
+
+#: packages/admin/src/components/Widgets.tsx:136
+msgid "Show post count"
+msgstr ""
+
+#: packages/admin/src/components/Widgets.tsx:128
+msgid "Show thumbnails"
+msgstr ""
 
 #: packages/admin/src/components/settings/ApiTokenSettings.tsx:210
 msgid "Show token"
@@ -7195,6 +7266,7 @@ msgid "Tagline"
 msgstr "Alcím"
 
 #: packages/admin/src/components/AdminCommandPalette.tsx:202
+#: packages/admin/src/components/Widgets.tsx:141
 msgid "Tags"
 msgstr "Címkék"
 
@@ -7421,7 +7493,7 @@ msgstr "Ez a szakasz egy másik rendszerből lett importálva."
 msgid "This update exposes the following routes without authentication:"
 msgstr "Ez a frissítés a következő útvonalakat teszi elérhetővé hitelesítés nélkül:"
 
-#: packages/admin/src/components/Widgets.tsx:633
+#: packages/admin/src/components/Widgets.tsx:698
 msgid "This will delete the widget area and all its widgets. This action cannot be undone."
 msgstr "Ez törli a widgetterületet és az összes widgetjét. A művelet nem vonható vissza."
 
@@ -7471,7 +7543,7 @@ msgstr "Dátumok megjelenítéséhez használt időzóna (pl. Europe/Budapest)"
 #: packages/admin/src/components/ContentList.tsx:643
 #: packages/admin/src/components/SectionEditor.tsx:238
 #: packages/admin/src/components/Sections.tsx:170
-#: packages/admin/src/components/Widgets.tsx:809
+#: packages/admin/src/components/Widgets.tsx:874
 msgid "Title"
 msgstr "Cím"
 
@@ -7768,8 +7840,8 @@ msgstr "Cím nélküli"
 msgid "Untitled file"
 msgstr "Cím nélküli fájl"
 
-#: packages/admin/src/components/Widgets.tsx:466
-#: packages/admin/src/components/Widgets.tsx:727
+#: packages/admin/src/components/Widgets.tsx:531
+#: packages/admin/src/components/Widgets.tsx:792
 msgid "Untitled Widget"
 msgstr "Cím nélküli widget"
 
@@ -8230,39 +8302,39 @@ msgstr ""
 msgid "Wide"
 msgstr "Széles"
 
-#: packages/admin/src/components/Widgets.tsx:720
-#: packages/admin/src/components/Widgets.tsx:735
+#: packages/admin/src/components/Widgets.tsx:785
+#: packages/admin/src/components/Widgets.tsx:800
 msgid "widget"
 msgstr "widget"
 
-#: packages/admin/src/components/Widgets.tsx:170
+#: packages/admin/src/components/Widgets.tsx:230
 msgid "Widget added"
 msgstr "Widget hozzáadva"
 
-#: packages/admin/src/components/Widgets.tsx:158
+#: packages/admin/src/components/Widgets.tsx:218
 msgid "Widget area created"
 msgstr "Widgetterület létrehozva"
 
-#: packages/admin/src/components/Widgets.tsx:563
+#: packages/admin/src/components/Widgets.tsx:628
 msgid "Widget area deleted"
 msgstr "Widgetterület törölve"
 
-#: packages/admin/src/components/Widgets.tsx:683
+#: packages/admin/src/components/Widgets.tsx:748
 msgid "Widget deleted"
 msgstr "Widget törölve"
 
-#: packages/admin/src/components/Widgets.tsx:812
+#: packages/admin/src/components/Widgets.tsx:877
 msgid "Widget title"
 msgstr "Widget címe"
 
-#: packages/admin/src/components/Widgets.tsx:698
+#: packages/admin/src/components/Widgets.tsx:763
 msgid "Widget updated"
 msgstr "Widget frissítve"
 
 #: packages/admin/src/components/AdminCommandPalette.tsx:169
 #: packages/admin/src/components/PluginManager.tsx:379
 #: packages/admin/src/components/Sidebar.tsx:333
-#: packages/admin/src/components/Widgets.tsx:325
+#: packages/admin/src/components/Widgets.tsx:385
 #: packages/admin/src/components/WordPressImport.tsx:1157
 msgid "Widgets"
 msgstr "Widgetek"
@@ -8296,7 +8368,7 @@ msgstr "WordPress felhasználónév"
 msgid "Working on {selectedCount} items…"
 msgstr ""
 
-#: packages/admin/src/components/Widgets.tsx:822
+#: packages/admin/src/components/Widgets.tsx:887
 msgid "Write widget content..."
 msgstr "Widgettartalom írása..."
 
@@ -8315,6 +8387,10 @@ msgstr ""
 #: packages/admin/src/components/editor/codeBlockLanguages.ts:59
 msgid "YAML"
 msgstr "YAML"
+
+#: packages/admin/src/components/Widgets.tsx:161
+msgid "Yearly"
+msgstr ""
 
 #: packages/admin/src/components/users/UserDetail.tsx:236
 #: packages/admin/src/routes/byline-schema.tsx:420

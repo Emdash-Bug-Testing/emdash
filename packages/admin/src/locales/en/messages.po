@@ -738,7 +738,7 @@ msgstr "Add Sub-Field"
 msgid "Add tags..."
 msgstr "Add tags..."
 
-#: packages/admin/src/components/Widgets.tsx:338
+#: packages/admin/src/components/Widgets.tsx:398
 msgid "Add Widget Area"
 msgstr "Add Widget Area"
 
@@ -957,7 +957,7 @@ msgstr "Any media type allowed (subject to global limits)."
 msgid "API Tokens"
 msgstr "API Tokens"
 
-#: packages/admin/src/components/Widgets.tsx:375
+#: packages/admin/src/components/Widgets.tsx:435
 msgid "Appears on posts and pages"
 msgstr "Appears on posts and pages"
 
@@ -1007,6 +1007,7 @@ msgid "Archived"
 msgstr "Archived"
 
 #: packages/admin/src/components/AllowedTypesEditor.tsx:65
+#: packages/admin/src/components/Widgets.tsx:156
 msgid "Archives"
 msgstr "Archives"
 
@@ -1141,7 +1142,7 @@ msgstr "Available media"
 msgid "Available Providers"
 msgstr "Available Providers"
 
-#: packages/admin/src/components/Widgets.tsx:401
+#: packages/admin/src/components/Widgets.tsx:461
 msgid "Available Widgets"
 msgstr "Available Widgets"
 
@@ -1366,7 +1367,7 @@ msgstr "Can view content"
 #: packages/admin/src/components/TaxonomyManager.tsx:472
 #: packages/admin/src/components/TaxonomyManager.tsx:686
 #: packages/admin/src/components/users/InviteUserModal.tsx:198
-#: packages/admin/src/components/Widgets.tsx:386
+#: packages/admin/src/components/Widgets.tsx:446
 #: packages/admin/src/components/WordPressImport.tsx:1917
 msgid "Cancel"
 msgstr "Cancel"
@@ -1411,6 +1412,7 @@ msgid "Captions / Subtitles"
 msgstr "Captions / Subtitles"
 
 #: packages/admin/src/components/AdminCommandPalette.tsx:193
+#: packages/admin/src/components/Widgets.tsx:133
 msgid "Categories"
 msgstr "Categories"
 
@@ -1581,9 +1583,9 @@ msgstr "Click the link in the email to sign in."
 #: packages/admin/src/components/users/InviteUserModal.tsx:94
 #: packages/admin/src/components/users/InviteUserModal.tsx:98
 #: packages/admin/src/components/WelcomeModal.tsx:54
-#: packages/admin/src/components/Widgets.tsx:348
-#: packages/admin/src/components/Widgets.tsx:354
-#: packages/admin/src/components/Widgets.tsx:358
+#: packages/admin/src/components/Widgets.tsx:408
+#: packages/admin/src/components/Widgets.tsx:414
+#: packages/admin/src/components/Widgets.tsx:418
 msgid "Close"
 msgstr "Close"
 
@@ -1666,7 +1668,7 @@ msgstr "Comments from logged-in CMS users are approved automatically"
 msgid "Complete signup"
 msgstr "Complete signup"
 
-#: packages/admin/src/components/Widgets.tsx:849
+#: packages/admin/src/components/Widgets.tsx:914
 msgid "Component"
 msgstr "Component"
 
@@ -1708,7 +1710,7 @@ msgstr "Connected {0}"
 #: packages/admin/src/components/PortableTextEditor.tsx:2208
 #: packages/admin/src/components/SectionEditor.tsx:193
 #: packages/admin/src/components/Sidebar.tsx:451
-#: packages/admin/src/components/Widgets.tsx:817
+#: packages/admin/src/components/Widgets.tsx:882
 msgid "Content"
 msgstr "Content"
 
@@ -1875,7 +1877,7 @@ msgstr "Count"
 #: packages/admin/src/components/Redirects.tsx:191
 #: packages/admin/src/components/Sections.tsx:212
 #: packages/admin/src/components/TaxonomyManager.tsx:479
-#: packages/admin/src/components/Widgets.tsx:389
+#: packages/admin/src/components/Widgets.tsx:449
 #: packages/admin/src/routes/bylines.tsx:580
 msgid "Create"
 msgstr "Create"
@@ -1981,7 +1983,7 @@ msgstr "Create Taxonomy"
 msgid "Create Token"
 msgstr "Create Token"
 
-#: packages/admin/src/components/Widgets.tsx:345
+#: packages/admin/src/components/Widgets.tsx:405
 msgid "Create Widget Area"
 msgstr "Create Widget Area"
 
@@ -2196,7 +2198,7 @@ msgstr "Defined in code"
 #: packages/admin/src/components/Sections.tsx:407
 #: packages/admin/src/components/settings/BackupSettings.tsx:284
 #: packages/admin/src/components/TaxonomyManager.tsx:886
-#: packages/admin/src/components/Widgets.tsx:634
+#: packages/admin/src/components/Widgets.tsx:699
 #: packages/admin/src/routes/byline-schema.tsx:378
 #: packages/admin/src/routes/bylines.tsx:589
 #: packages/admin/src/routes/bylines.tsx:625
@@ -2216,7 +2218,7 @@ msgstr "Delete \"{0}\"? This cannot be undone."
 #: packages/admin/src/components/settings/AllowedDomainsSettings.tsx:252
 #: packages/admin/src/components/settings/BackupSettings.tsx:245
 #: packages/admin/src/components/TaxonomyManager.tsx:97
-#: packages/admin/src/components/Widgets.tsx:735
+#: packages/admin/src/components/Widgets.tsx:800
 #: packages/admin/src/routes/byline-schema.tsx:458
 msgid "Delete {0}"
 msgstr "Delete {0}"
@@ -2232,7 +2234,7 @@ msgid "Delete {0} menu"
 msgstr "Delete {0} menu"
 
 #. placeholder {0}: area.label
-#: packages/admin/src/components/Widgets.tsx:582
+#: packages/admin/src/components/Widgets.tsx:647
 msgid "Delete {0} widget area"
 msgstr "Delete {0} widget area"
 
@@ -2328,7 +2330,7 @@ msgstr "Delete Section?"
 msgid "Delete table"
 msgstr "Delete table"
 
-#: packages/admin/src/components/Widgets.tsx:632
+#: packages/admin/src/components/Widgets.tsx:697
 msgid "Delete Widget Area?"
 msgstr "Delete Widget Area?"
 
@@ -2352,7 +2354,7 @@ msgstr "Deleting \"{0}\" will also remove {1, plural, one {# stored value} other
 #: packages/admin/src/components/Sections.tsx:309
 #: packages/admin/src/components/settings/BackupSettings.tsx:285
 #: packages/admin/src/components/TaxonomyManager.tsx:887
-#: packages/admin/src/components/Widgets.tsx:635
+#: packages/admin/src/components/Widgets.tsx:700
 #: packages/admin/src/routes/bylines.tsx:626
 msgid "Deleting..."
 msgstr "Deleting..."
@@ -2400,7 +2402,7 @@ msgstr "Describe what this section is for..."
 #: packages/admin/src/components/RegistryPluginDetail.tsx:790
 #: packages/admin/src/components/SectionEditor.tsx:261
 #: packages/admin/src/components/Sections.tsx:200
-#: packages/admin/src/components/Widgets.tsx:373
+#: packages/admin/src/components/Widgets.tsx:433
 msgid "Description"
 msgstr "Description"
 
@@ -2514,9 +2516,17 @@ msgstr "Discarding..."
 msgid "Dismiss"
 msgstr "Dismiss"
 
+#: packages/admin/src/components/Widgets.tsx:125
+msgid "Display a list of recent posts"
+msgstr "Display a list of recent posts"
+
 #: packages/admin/src/components/Widgets.tsx:103
 msgid "Display a navigation menu"
 msgstr "Display a navigation menu"
+
+#: packages/admin/src/components/Widgets.tsx:134
+msgid "Display category list"
+msgstr "Display category list"
 
 #: packages/admin/src/components/ContentSettingsPanel.tsx:893
 #: packages/admin/src/components/ContentSettingsPanel.tsx:955
@@ -2532,6 +2542,10 @@ msgstr "Display name for admin interface"
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:458
 msgid "Display Size"
 msgstr "Display Size"
+
+#: packages/admin/src/components/Widgets.tsx:142
+msgid "Display tag cloud"
+msgstr "Display tag cloud"
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:356
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:545
@@ -2641,7 +2655,7 @@ msgstr "Drafts & Private"
 msgid "Drag and drop or click to browse (.xml)"
 msgstr "Drag and drop or click to browse (.xml)"
 
-#: packages/admin/src/components/Widgets.tsx:618
+#: packages/admin/src/components/Widgets.tsx:683
 msgid "Drag here to add"
 msgstr "Drag here to add"
 
@@ -2652,7 +2666,7 @@ msgstr "Drag to reorder"
 #. placeholder {0}: field.label
 #. placeholder {0}: widget.title ?? t`widget`
 #: packages/admin/src/components/ContentTypeEditor.tsx:716
-#: packages/admin/src/components/Widgets.tsx:720
+#: packages/admin/src/components/Widgets.tsx:785
 msgid "Drag to reorder {0}"
 msgstr "Drag to reorder {0}"
 
@@ -2660,15 +2674,15 @@ msgstr "Drag to reorder {0}"
 msgid "Drag to reorder block"
 msgstr "Drag to reorder block"
 
-#: packages/admin/src/components/Widgets.tsx:622
+#: packages/admin/src/components/Widgets.tsx:687
 msgid "Drag widgets here to add them"
 msgstr "Drag widgets here to add them"
 
-#: packages/admin/src/components/Widgets.tsx:402
+#: packages/admin/src/components/Widgets.tsx:462
 msgid "Drag widgets into an area to add them"
 msgstr "Drag widgets into an area to add them"
 
-#: packages/admin/src/components/Widgets.tsx:618
+#: packages/admin/src/components/Widgets.tsx:683
 msgid "Drop to add widget"
 msgstr "Drop to add widget"
 
@@ -2953,16 +2967,16 @@ msgstr "Enter your WordPress site URL"
 #: packages/admin/src/components/MenuEditor.tsx:193
 #: packages/admin/src/components/MenuEditor.tsx:233
 #: packages/admin/src/components/SetupWizard.tsx:539
-#: packages/admin/src/components/Widgets.tsx:687
+#: packages/admin/src/components/Widgets.tsx:752
 #: packages/admin/src/router.tsx:2142
 msgid "Error"
 msgstr "Error"
 
-#: packages/admin/src/components/Widgets.tsx:174
+#: packages/admin/src/components/Widgets.tsx:234
 msgid "Error adding widget"
 msgstr "Error adding widget"
 
-#: packages/admin/src/components/Widgets.tsx:235
+#: packages/admin/src/components/Widgets.tsx:295
 msgid "Error reordering widgets"
 msgstr "Error reordering widgets"
 
@@ -2970,7 +2984,7 @@ msgstr "Error reordering widgets"
 msgid "Error saving section"
 msgstr "Error saving section"
 
-#: packages/admin/src/components/Widgets.tsx:702
+#: packages/admin/src/components/Widgets.tsx:767
 msgid "Error updating widget"
 msgstr "Error updating widget"
 
@@ -3797,6 +3811,10 @@ msgstr "Grid view"
 msgid "Group (optional)"
 msgstr "Group (optional)"
 
+#: packages/admin/src/components/Widgets.tsx:160
+msgid "Group by"
+msgstr "Group by"
+
 #: packages/admin/src/routes/bylines.tsx:556
 msgid "Guest byline"
 msgstr "Guest byline"
@@ -4284,7 +4302,7 @@ msgstr "Kotlin"
 #: packages/admin/src/components/MenuEditor.tsx:593
 #: packages/admin/src/components/MenuList.tsx:166
 #: packages/admin/src/components/TaxonomyManager.tsx:623
-#: packages/admin/src/components/Widgets.tsx:371
+#: packages/admin/src/components/Widgets.tsx:431
 #: packages/admin/src/routes/byline-schema.tsx:234
 msgid "Label"
 msgstr "Label"
@@ -4374,6 +4392,10 @@ msgstr "light"
 #: packages/admin/src/components/ThemeToggle.tsx:24
 msgid "Light"
 msgstr "Light"
+
+#: packages/admin/src/components/Widgets.tsx:163
+msgid "Limit"
+msgstr "Limit"
 
 #: packages/admin/src/components/SignupPage.tsx:257
 msgid "Link expired"
@@ -4489,7 +4511,7 @@ msgstr "Loading setup..."
 msgid "Loading terms..."
 msgstr "Loading terms..."
 
-#: packages/admin/src/components/Widgets.tsx:310
+#: packages/admin/src/components/Widgets.tsx:370
 msgid "Loading widgets..."
 msgstr "Loading widgets..."
 
@@ -4561,7 +4583,7 @@ msgstr "Lowercase letters, numbers, and hyphens only"
 msgid "Lowercase letters, numbers, and underscores only, starting with a letter"
 msgstr "Lowercase letters, numbers, and underscores only, starting with a letter"
 
-#: packages/admin/src/components/Widgets.tsx:371
+#: packages/admin/src/components/Widgets.tsx:431
 msgid "Main Sidebar"
 msgstr "Main Sidebar"
 
@@ -4589,7 +4611,7 @@ msgstr "Manage {0} for {1}"
 msgid "Manage bylines in {entryLocale}"
 msgstr "Manage bylines in {entryLocale}"
 
-#: packages/admin/src/components/Widgets.tsx:326
+#: packages/admin/src/components/Widgets.tsx:386
 msgid "Manage content widgets in your widget areas"
 msgstr "Manage content widgets in your widget areas"
 
@@ -4670,6 +4692,10 @@ msgstr "Max Length"
 msgid "Max Value"
 msgstr "Max Value"
 
+#: packages/admin/src/components/Widgets.tsx:145
+msgid "Maximum tags"
+msgstr "Maximum tags"
+
 #: packages/admin/src/components/editor/codeBlockLanguages.ts:45
 msgid "MDX"
 msgstr "MDX"
@@ -4721,7 +4747,7 @@ msgid "Medium section heading"
 msgstr "Medium section heading"
 
 #: packages/admin/src/components/Widgets.tsx:102
-#: packages/admin/src/components/Widgets.tsx:832
+#: packages/admin/src/components/Widgets.tsx:897
 msgid "Menu"
 msgstr "Menu"
 
@@ -4829,6 +4855,14 @@ msgstr "Modified"
 msgid "Modify collection schemas"
 msgstr "Modify collection schemas"
 
+#: packages/admin/src/components/Widgets.tsx:161
+msgid "Monthly"
+msgstr "Monthly"
+
+#: packages/admin/src/components/Widgets.tsx:157
+msgid "Monthly/yearly archives"
+msgstr "Monthly/yearly archives"
+
 #: packages/admin/src/components/MarketplaceBrowse.tsx:42
 msgid "Most Popular"
 msgstr "Most Popular"
@@ -4908,7 +4942,7 @@ msgstr "My Awesome Blog"
 #: packages/admin/src/components/TaxonomyManager.tsx:821
 #: packages/admin/src/components/ThemeMarketplaceBrowse.tsx:37
 #: packages/admin/src/components/users/UserDetail.tsx:148
-#: packages/admin/src/components/Widgets.tsx:365
+#: packages/admin/src/components/Widgets.tsx:425
 msgid "Name"
 msgstr "Name"
 
@@ -5307,7 +5341,7 @@ msgstr "No users found matching your filters."
 msgid "No users yet."
 msgstr "No users yet."
 
-#: packages/admin/src/components/Widgets.tsx:434
+#: packages/admin/src/components/Widgets.tsx:499
 msgid "No widget areas yet. Create one to get started."
 msgstr "No widget areas yet. Create one to get started."
 
@@ -5328,6 +5362,10 @@ msgstr "Not compatible with this environment"
 #: packages/admin/src/components/FieldEditor.tsx:581
 msgid "Number"
 msgstr "Number"
+
+#: packages/admin/src/components/Widgets.tsx:127
+msgid "Number of posts"
+msgstr "Number of posts"
 
 #: packages/admin/src/components/settings/GeneralSettings.tsx:278
 msgid "Number of posts to show per page on list views"
@@ -5616,6 +5654,10 @@ msgstr "PHP"
 #: packages/admin/src/components/SetupWizard.tsx:290
 msgid "Pick any method to create your admin account."
 msgstr "Pick any method to create your admin account."
+
+#: packages/admin/src/components/Widgets.tsx:152
+msgid "Placeholder text"
+msgstr "Placeholder text"
 
 #: packages/admin/src/components/auth/PasskeyLogin.tsx:311
 #: packages/admin/src/components/auth/PasskeyRegistration.tsx:310
@@ -5908,6 +5950,10 @@ msgstr "Ready"
 #: packages/admin/src/components/Dashboard.tsx:298
 msgid "Recent Activity"
 msgstr "Recent Activity"
+
+#: packages/admin/src/components/Widgets.tsx:124
+msgid "Recent Posts"
+msgstr "Recent Posts"
 
 #: packages/admin/src/components/MarketplaceBrowse.tsx:43
 #: packages/admin/src/components/ThemeMarketplaceBrowse.tsx:35
@@ -6279,7 +6325,7 @@ msgstr "Same window"
 #: packages/admin/src/components/Redirects.tsx:190
 #: packages/admin/src/components/SaveButton.tsx:32
 #: packages/admin/src/components/settings/BackupSettings.tsx:192
-#: packages/admin/src/components/Widgets.tsx:892
+#: packages/admin/src/components/Widgets.tsx:966
 #: packages/admin/src/routes/bylines.tsx:580
 msgid "Save"
 msgstr "Save"
@@ -6347,7 +6393,7 @@ msgstr "Saved \"{0}\"."
 #: packages/admin/src/components/settings/SocialSettings.tsx:147
 #: packages/admin/src/components/TaxonomyManager.tsx:476
 #: packages/admin/src/components/users/UserDetail.tsx:311
-#: packages/admin/src/components/Widgets.tsx:892
+#: packages/admin/src/components/Widgets.tsx:966
 #: packages/admin/src/routes/bylines.tsx:580
 msgid "Saving..."
 msgstr "Saving..."
@@ -6452,6 +6498,7 @@ msgid "SCSS"
 msgstr "SCSS"
 
 #: packages/admin/src/components/ContentTypeEditor.tsx:86
+#: packages/admin/src/components/Widgets.tsx:149
 msgid "Search"
 msgstr "Search"
 
@@ -6502,6 +6549,10 @@ msgstr "Search Engine Optimization"
 #: packages/admin/src/components/Settings.tsx:83
 msgid "Search engine optimization and verification"
 msgstr "Search engine optimization and verification"
+
+#: packages/admin/src/components/Widgets.tsx:150
+msgid "Search form"
+msgstr "Search form"
 
 #: packages/admin/src/components/MediaLibrary.tsx:416
 #: packages/admin/src/components/MediaPickerModal.tsx:578
@@ -6661,11 +6712,11 @@ msgstr "Select {label}"
 msgid "Select {title}"
 msgstr "Select {title}"
 
-#: packages/admin/src/components/Widgets.tsx:869
+#: packages/admin/src/components/Widgets.tsx:939
 msgid "Select a component..."
 msgstr "Select a component..."
 
-#: packages/admin/src/components/Widgets.tsx:837
+#: packages/admin/src/components/Widgets.tsx:902
 msgid "Select a menu..."
 msgstr "Select a menu..."
 
@@ -6885,6 +6936,26 @@ msgstr "Short text"
 #: packages/admin/src/components/FieldEditor.tsx:579
 msgid "Short Text"
 msgstr "Short Text"
+
+#: packages/admin/src/components/Widgets.tsx:144
+msgid "Show count"
+msgstr "Show count"
+
+#: packages/admin/src/components/Widgets.tsx:129
+msgid "Show date"
+msgstr "Show date"
+
+#: packages/admin/src/components/Widgets.tsx:137
+msgid "Show hierarchy"
+msgstr "Show hierarchy"
+
+#: packages/admin/src/components/Widgets.tsx:136
+msgid "Show post count"
+msgstr "Show post count"
+
+#: packages/admin/src/components/Widgets.tsx:128
+msgid "Show thumbnails"
+msgstr "Show thumbnails"
 
 #: packages/admin/src/components/settings/ApiTokenSettings.tsx:210
 msgid "Show token"
@@ -7195,6 +7266,7 @@ msgid "Tagline"
 msgstr "Tagline"
 
 #: packages/admin/src/components/AdminCommandPalette.tsx:202
+#: packages/admin/src/components/Widgets.tsx:141
 msgid "Tags"
 msgstr "Tags"
 
@@ -7421,7 +7493,7 @@ msgstr "This section was imported from another system."
 msgid "This update exposes the following routes without authentication:"
 msgstr "This update exposes the following routes without authentication:"
 
-#: packages/admin/src/components/Widgets.tsx:633
+#: packages/admin/src/components/Widgets.tsx:698
 msgid "This will delete the widget area and all its widgets. This action cannot be undone."
 msgstr "This will delete the widget area and all its widgets. This action cannot be undone."
 
@@ -7471,7 +7543,7 @@ msgstr "Timezone for displaying dates (e.g., America/New_York)"
 #: packages/admin/src/components/ContentList.tsx:643
 #: packages/admin/src/components/SectionEditor.tsx:238
 #: packages/admin/src/components/Sections.tsx:170
-#: packages/admin/src/components/Widgets.tsx:809
+#: packages/admin/src/components/Widgets.tsx:874
 msgid "Title"
 msgstr "Title"
 
@@ -7768,8 +7840,8 @@ msgstr "Untitled"
 msgid "Untitled file"
 msgstr "Untitled file"
 
-#: packages/admin/src/components/Widgets.tsx:466
-#: packages/admin/src/components/Widgets.tsx:727
+#: packages/admin/src/components/Widgets.tsx:531
+#: packages/admin/src/components/Widgets.tsx:792
 msgid "Untitled Widget"
 msgstr "Untitled Widget"
 
@@ -8230,39 +8302,39 @@ msgstr "Why is this important?"
 msgid "Wide"
 msgstr "Wide"
 
-#: packages/admin/src/components/Widgets.tsx:720
-#: packages/admin/src/components/Widgets.tsx:735
+#: packages/admin/src/components/Widgets.tsx:785
+#: packages/admin/src/components/Widgets.tsx:800
 msgid "widget"
 msgstr "widget"
 
-#: packages/admin/src/components/Widgets.tsx:170
+#: packages/admin/src/components/Widgets.tsx:230
 msgid "Widget added"
 msgstr "Widget added"
 
-#: packages/admin/src/components/Widgets.tsx:158
+#: packages/admin/src/components/Widgets.tsx:218
 msgid "Widget area created"
 msgstr "Widget area created"
 
-#: packages/admin/src/components/Widgets.tsx:563
+#: packages/admin/src/components/Widgets.tsx:628
 msgid "Widget area deleted"
 msgstr "Widget area deleted"
 
-#: packages/admin/src/components/Widgets.tsx:683
+#: packages/admin/src/components/Widgets.tsx:748
 msgid "Widget deleted"
 msgstr "Widget deleted"
 
-#: packages/admin/src/components/Widgets.tsx:812
+#: packages/admin/src/components/Widgets.tsx:877
 msgid "Widget title"
 msgstr "Widget title"
 
-#: packages/admin/src/components/Widgets.tsx:698
+#: packages/admin/src/components/Widgets.tsx:763
 msgid "Widget updated"
 msgstr "Widget updated"
 
 #: packages/admin/src/components/AdminCommandPalette.tsx:169
 #: packages/admin/src/components/PluginManager.tsx:379
 #: packages/admin/src/components/Sidebar.tsx:333
-#: packages/admin/src/components/Widgets.tsx:325
+#: packages/admin/src/components/Widgets.tsx:385
 #: packages/admin/src/components/WordPressImport.tsx:1157
 msgid "Widgets"
 msgstr "Widgets"
@@ -8296,7 +8368,7 @@ msgstr "WordPress Username"
 msgid "Working on {selectedCount} items…"
 msgstr "Working on {selectedCount} items…"
 
-#: packages/admin/src/components/Widgets.tsx:822
+#: packages/admin/src/components/Widgets.tsx:887
 msgid "Write widget content..."
 msgstr "Write widget content..."
 
@@ -8315,6 +8387,10 @@ msgstr "xxxx xxxx xxxx xxxx xxxx xxxx"
 #: packages/admin/src/components/editor/codeBlockLanguages.ts:59
 msgid "YAML"
 msgstr "YAML"
+
+#: packages/admin/src/components/Widgets.tsx:161
+msgid "Yearly"
+msgstr "Yearly"
 
 #: packages/admin/src/components/users/UserDetail.tsx:236
 #: packages/admin/src/routes/byline-schema.tsx:420

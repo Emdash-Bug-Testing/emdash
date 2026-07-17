@@ -738,7 +738,7 @@ msgstr "Afegeix un subcamp"
 msgid "Add tags..."
 msgstr "Afegeix etiquetes..."
 
-#: packages/admin/src/components/Widgets.tsx:338
+#: packages/admin/src/components/Widgets.tsx:398
 msgid "Add Widget Area"
 msgstr "Afegeix una àrea de ginys"
 
@@ -957,7 +957,7 @@ msgstr "S'accepta qualsevol tipus de fitxer multimèdia (subjecte als límits gl
 msgid "API Tokens"
 msgstr "Testimonis d'API"
 
-#: packages/admin/src/components/Widgets.tsx:375
+#: packages/admin/src/components/Widgets.tsx:435
 msgid "Appears on posts and pages"
 msgstr "Apareix a les entrades i les pàgines"
 
@@ -1007,6 +1007,7 @@ msgid "Archived"
 msgstr "Arxivat"
 
 #: packages/admin/src/components/AllowedTypesEditor.tsx:65
+#: packages/admin/src/components/Widgets.tsx:156
 msgid "Archives"
 msgstr "Arxius"
 
@@ -1141,7 +1142,7 @@ msgstr "Fitxers multimèdia disponibles"
 msgid "Available Providers"
 msgstr "Proveïdors disponibles"
 
-#: packages/admin/src/components/Widgets.tsx:401
+#: packages/admin/src/components/Widgets.tsx:461
 msgid "Available Widgets"
 msgstr "Ginys disponibles"
 
@@ -1366,7 +1367,7 @@ msgstr "Pot veure el contingut"
 #: packages/admin/src/components/TaxonomyManager.tsx:472
 #: packages/admin/src/components/TaxonomyManager.tsx:686
 #: packages/admin/src/components/users/InviteUserModal.tsx:198
-#: packages/admin/src/components/Widgets.tsx:386
+#: packages/admin/src/components/Widgets.tsx:446
 #: packages/admin/src/components/WordPressImport.tsx:1917
 msgid "Cancel"
 msgstr "Cancel·la"
@@ -1411,6 +1412,7 @@ msgid "Captions / Subtitles"
 msgstr "Llegendes / Subtítols"
 
 #: packages/admin/src/components/AdminCommandPalette.tsx:193
+#: packages/admin/src/components/Widgets.tsx:133
 msgid "Categories"
 msgstr "Categories"
 
@@ -1581,9 +1583,9 @@ msgstr "Fes clic a l'enllaç del correu electrònic per iniciar la sessió."
 #: packages/admin/src/components/users/InviteUserModal.tsx:94
 #: packages/admin/src/components/users/InviteUserModal.tsx:98
 #: packages/admin/src/components/WelcomeModal.tsx:54
-#: packages/admin/src/components/Widgets.tsx:348
-#: packages/admin/src/components/Widgets.tsx:354
-#: packages/admin/src/components/Widgets.tsx:358
+#: packages/admin/src/components/Widgets.tsx:408
+#: packages/admin/src/components/Widgets.tsx:414
+#: packages/admin/src/components/Widgets.tsx:418
 msgid "Close"
 msgstr "Tanca"
 
@@ -1666,7 +1668,7 @@ msgstr "Els comentaris dels usuaris del CMS amb sessió iniciada s'aproven autom
 msgid "Complete signup"
 msgstr "Completa el registre"
 
-#: packages/admin/src/components/Widgets.tsx:849
+#: packages/admin/src/components/Widgets.tsx:914
 msgid "Component"
 msgstr "Component"
 
@@ -1708,7 +1710,7 @@ msgstr "{0} connectat"
 #: packages/admin/src/components/PortableTextEditor.tsx:2208
 #: packages/admin/src/components/SectionEditor.tsx:193
 #: packages/admin/src/components/Sidebar.tsx:451
-#: packages/admin/src/components/Widgets.tsx:817
+#: packages/admin/src/components/Widgets.tsx:882
 msgid "Content"
 msgstr "Contingut"
 
@@ -1875,7 +1877,7 @@ msgstr "Recompte"
 #: packages/admin/src/components/Redirects.tsx:191
 #: packages/admin/src/components/Sections.tsx:212
 #: packages/admin/src/components/TaxonomyManager.tsx:479
-#: packages/admin/src/components/Widgets.tsx:389
+#: packages/admin/src/components/Widgets.tsx:449
 #: packages/admin/src/routes/bylines.tsx:580
 msgid "Create"
 msgstr "Crea"
@@ -1981,7 +1983,7 @@ msgstr "Crea una taxonomia"
 msgid "Create Token"
 msgstr "Crea un testimoni"
 
-#: packages/admin/src/components/Widgets.tsx:345
+#: packages/admin/src/components/Widgets.tsx:405
 msgid "Create Widget Area"
 msgstr "Crea una àrea de ginys"
 
@@ -2196,7 +2198,7 @@ msgstr "Definit al codi"
 #: packages/admin/src/components/Sections.tsx:407
 #: packages/admin/src/components/settings/BackupSettings.tsx:284
 #: packages/admin/src/components/TaxonomyManager.tsx:886
-#: packages/admin/src/components/Widgets.tsx:634
+#: packages/admin/src/components/Widgets.tsx:699
 #: packages/admin/src/routes/byline-schema.tsx:378
 #: packages/admin/src/routes/bylines.tsx:589
 #: packages/admin/src/routes/bylines.tsx:625
@@ -2216,7 +2218,7 @@ msgstr "Vols eliminar «{0}»? Aquesta acció no es pot desfer."
 #: packages/admin/src/components/settings/AllowedDomainsSettings.tsx:252
 #: packages/admin/src/components/settings/BackupSettings.tsx:245
 #: packages/admin/src/components/TaxonomyManager.tsx:97
-#: packages/admin/src/components/Widgets.tsx:735
+#: packages/admin/src/components/Widgets.tsx:800
 #: packages/admin/src/routes/byline-schema.tsx:458
 msgid "Delete {0}"
 msgstr "Elimina {0}"
@@ -2232,7 +2234,7 @@ msgid "Delete {0} menu"
 msgstr "Elimina el menú {0}"
 
 #. placeholder {0}: area.label
-#: packages/admin/src/components/Widgets.tsx:582
+#: packages/admin/src/components/Widgets.tsx:647
 msgid "Delete {0} widget area"
 msgstr "Elimina l'àrea de ginys {0}"
 
@@ -2328,7 +2330,7 @@ msgstr "Vols eliminar la secció?"
 msgid "Delete table"
 msgstr "Elimina la taula"
 
-#: packages/admin/src/components/Widgets.tsx:632
+#: packages/admin/src/components/Widgets.tsx:697
 msgid "Delete Widget Area?"
 msgstr "Vols eliminar l'àrea de ginys?"
 
@@ -2352,7 +2354,7 @@ msgstr "En eliminar «{0}» també se suprimirà {1, plural, one {# valor emmaga
 #: packages/admin/src/components/Sections.tsx:309
 #: packages/admin/src/components/settings/BackupSettings.tsx:285
 #: packages/admin/src/components/TaxonomyManager.tsx:887
-#: packages/admin/src/components/Widgets.tsx:635
+#: packages/admin/src/components/Widgets.tsx:700
 #: packages/admin/src/routes/bylines.tsx:626
 msgid "Deleting..."
 msgstr "S'està eliminant..."
@@ -2400,7 +2402,7 @@ msgstr "Descriu per a què serveix aquesta secció..."
 #: packages/admin/src/components/RegistryPluginDetail.tsx:790
 #: packages/admin/src/components/SectionEditor.tsx:261
 #: packages/admin/src/components/Sections.tsx:200
-#: packages/admin/src/components/Widgets.tsx:373
+#: packages/admin/src/components/Widgets.tsx:433
 msgid "Description"
 msgstr "Descripció"
 
@@ -2514,9 +2516,17 @@ msgstr "S'està descartant..."
 msgid "Dismiss"
 msgstr "Descarta"
 
+#: packages/admin/src/components/Widgets.tsx:125
+msgid "Display a list of recent posts"
+msgstr ""
+
 #: packages/admin/src/components/Widgets.tsx:103
 msgid "Display a navigation menu"
 msgstr "Mostra un menú de navegació"
+
+#: packages/admin/src/components/Widgets.tsx:134
+msgid "Display category list"
+msgstr ""
 
 #: packages/admin/src/components/ContentSettingsPanel.tsx:893
 #: packages/admin/src/components/ContentSettingsPanel.tsx:955
@@ -2532,6 +2542,10 @@ msgstr "Nom visible per a la interfície d'administració"
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:458
 msgid "Display Size"
 msgstr "Mida de visualització"
+
+#: packages/admin/src/components/Widgets.tsx:142
+msgid "Display tag cloud"
+msgstr ""
 
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:356
 #: packages/admin/src/components/editor/ImageDetailPanel.tsx:545
@@ -2641,7 +2655,7 @@ msgstr ""
 msgid "Drag and drop or click to browse (.xml)"
 msgstr "Arrossega i deixa anar o fes clic per explorar (.xml)"
 
-#: packages/admin/src/components/Widgets.tsx:618
+#: packages/admin/src/components/Widgets.tsx:683
 msgid "Drag here to add"
 msgstr "Arrossega aquí per afegir"
 
@@ -2652,7 +2666,7 @@ msgstr "Arrossega per reordenar"
 #. placeholder {0}: field.label
 #. placeholder {0}: widget.title ?? t`widget`
 #: packages/admin/src/components/ContentTypeEditor.tsx:716
-#: packages/admin/src/components/Widgets.tsx:720
+#: packages/admin/src/components/Widgets.tsx:785
 msgid "Drag to reorder {0}"
 msgstr "Arrossega per reordenar {0}"
 
@@ -2660,15 +2674,15 @@ msgstr "Arrossega per reordenar {0}"
 msgid "Drag to reorder block"
 msgstr "Arrossega per reordenar el bloc"
 
-#: packages/admin/src/components/Widgets.tsx:622
+#: packages/admin/src/components/Widgets.tsx:687
 msgid "Drag widgets here to add them"
 msgstr "Arrossega ginys aquí per afegir-los"
 
-#: packages/admin/src/components/Widgets.tsx:402
+#: packages/admin/src/components/Widgets.tsx:462
 msgid "Drag widgets into an area to add them"
 msgstr "Arrossega ginys a una àrea per afegir-los"
 
-#: packages/admin/src/components/Widgets.tsx:618
+#: packages/admin/src/components/Widgets.tsx:683
 msgid "Drop to add widget"
 msgstr "Deixa anar per afegir el giny"
 
@@ -2953,16 +2967,16 @@ msgstr "Introdueix l'URL del teu lloc de WordPress"
 #: packages/admin/src/components/MenuEditor.tsx:193
 #: packages/admin/src/components/MenuEditor.tsx:233
 #: packages/admin/src/components/SetupWizard.tsx:539
-#: packages/admin/src/components/Widgets.tsx:687
+#: packages/admin/src/components/Widgets.tsx:752
 #: packages/admin/src/router.tsx:2142
 msgid "Error"
 msgstr "Error"
 
-#: packages/admin/src/components/Widgets.tsx:174
+#: packages/admin/src/components/Widgets.tsx:234
 msgid "Error adding widget"
 msgstr "Error en afegir el giny"
 
-#: packages/admin/src/components/Widgets.tsx:235
+#: packages/admin/src/components/Widgets.tsx:295
 msgid "Error reordering widgets"
 msgstr "Error en reordenar els ginys"
 
@@ -2970,7 +2984,7 @@ msgstr "Error en reordenar els ginys"
 msgid "Error saving section"
 msgstr "Error en desar la secció"
 
-#: packages/admin/src/components/Widgets.tsx:702
+#: packages/admin/src/components/Widgets.tsx:767
 msgid "Error updating widget"
 msgstr "Error en actualitzar el giny"
 
@@ -3797,6 +3811,10 @@ msgstr "Vista de graella"
 msgid "Group (optional)"
 msgstr "Grup (opcional)"
 
+#: packages/admin/src/components/Widgets.tsx:160
+msgid "Group by"
+msgstr ""
+
 #: packages/admin/src/routes/bylines.tsx:556
 msgid "Guest byline"
 msgstr "Signatura de convidat"
@@ -4284,7 +4302,7 @@ msgstr ""
 #: packages/admin/src/components/MenuEditor.tsx:593
 #: packages/admin/src/components/MenuList.tsx:166
 #: packages/admin/src/components/TaxonomyManager.tsx:623
-#: packages/admin/src/components/Widgets.tsx:371
+#: packages/admin/src/components/Widgets.tsx:431
 #: packages/admin/src/routes/byline-schema.tsx:234
 msgid "Label"
 msgstr "Etiqueta"
@@ -4374,6 +4392,10 @@ msgstr "clar"
 #: packages/admin/src/components/ThemeToggle.tsx:24
 msgid "Light"
 msgstr "Clar"
+
+#: packages/admin/src/components/Widgets.tsx:163
+msgid "Limit"
+msgstr ""
 
 #: packages/admin/src/components/SignupPage.tsx:257
 msgid "Link expired"
@@ -4489,7 +4511,7 @@ msgstr "S'està carregant la configuració inicial..."
 msgid "Loading terms..."
 msgstr "S'estan carregant els termes..."
 
-#: packages/admin/src/components/Widgets.tsx:310
+#: packages/admin/src/components/Widgets.tsx:370
 msgid "Loading widgets..."
 msgstr "S'estan carregant els ginys..."
 
@@ -4561,7 +4583,7 @@ msgstr "Només lletres minúscules, números i guions"
 msgid "Lowercase letters, numbers, and underscores only, starting with a letter"
 msgstr "Només lletres minúscules, números i guions baixos, començant per una lletra"
 
-#: packages/admin/src/components/Widgets.tsx:371
+#: packages/admin/src/components/Widgets.tsx:431
 msgid "Main Sidebar"
 msgstr "Barra lateral principal"
 
@@ -4589,7 +4611,7 @@ msgstr "Gestiona {0} per a {1}"
 msgid "Manage bylines in {entryLocale}"
 msgstr "Gestiona les signatures en {entryLocale}"
 
-#: packages/admin/src/components/Widgets.tsx:326
+#: packages/admin/src/components/Widgets.tsx:386
 msgid "Manage content widgets in your widget areas"
 msgstr "Gestiona els ginys de contingut de les teves àrees de ginys"
 
@@ -4670,6 +4692,10 @@ msgstr "Longitud màxima"
 msgid "Max Value"
 msgstr "Valor màxim"
 
+#: packages/admin/src/components/Widgets.tsx:145
+msgid "Maximum tags"
+msgstr ""
+
 #: packages/admin/src/components/editor/codeBlockLanguages.ts:45
 msgid "MDX"
 msgstr ""
@@ -4721,7 +4747,7 @@ msgid "Medium section heading"
 msgstr "Encapçalament de secció mitjà"
 
 #: packages/admin/src/components/Widgets.tsx:102
-#: packages/admin/src/components/Widgets.tsx:832
+#: packages/admin/src/components/Widgets.tsx:897
 msgid "Menu"
 msgstr "Menú"
 
@@ -4829,6 +4855,14 @@ msgstr "Modificat"
 msgid "Modify collection schemas"
 msgstr "Modifica els esquemes de col·lecció"
 
+#: packages/admin/src/components/Widgets.tsx:161
+msgid "Monthly"
+msgstr ""
+
+#: packages/admin/src/components/Widgets.tsx:157
+msgid "Monthly/yearly archives"
+msgstr ""
+
 #: packages/admin/src/components/MarketplaceBrowse.tsx:42
 msgid "Most Popular"
 msgstr "Més populars"
@@ -4908,7 +4942,7 @@ msgstr "El meu blog"
 #: packages/admin/src/components/TaxonomyManager.tsx:821
 #: packages/admin/src/components/ThemeMarketplaceBrowse.tsx:37
 #: packages/admin/src/components/users/UserDetail.tsx:148
-#: packages/admin/src/components/Widgets.tsx:365
+#: packages/admin/src/components/Widgets.tsx:425
 msgid "Name"
 msgstr "Nom"
 
@@ -5307,7 +5341,7 @@ msgstr "No s'ha trobat cap usuari que coincideixi amb els teus filtres."
 msgid "No users yet."
 msgstr "Encara no hi ha cap usuari."
 
-#: packages/admin/src/components/Widgets.tsx:434
+#: packages/admin/src/components/Widgets.tsx:499
 msgid "No widget areas yet. Create one to get started."
 msgstr "Encara no hi ha cap àrea de ginys. Crea'n una per començar."
 
@@ -5328,6 +5362,10 @@ msgstr "No és compatible amb aquest entorn"
 #: packages/admin/src/components/FieldEditor.tsx:581
 msgid "Number"
 msgstr "Nombre"
+
+#: packages/admin/src/components/Widgets.tsx:127
+msgid "Number of posts"
+msgstr ""
 
 #: packages/admin/src/components/settings/GeneralSettings.tsx:278
 msgid "Number of posts to show per page on list views"
@@ -5616,6 +5654,10 @@ msgstr ""
 #: packages/admin/src/components/SetupWizard.tsx:290
 msgid "Pick any method to create your admin account."
 msgstr "Tria qualsevol mètode per crear el teu compte d'administrador."
+
+#: packages/admin/src/components/Widgets.tsx:152
+msgid "Placeholder text"
+msgstr ""
 
 #: packages/admin/src/components/auth/PasskeyLogin.tsx:311
 #: packages/admin/src/components/auth/PasskeyRegistration.tsx:310
@@ -5908,6 +5950,10 @@ msgstr "A punt"
 #: packages/admin/src/components/Dashboard.tsx:298
 msgid "Recent Activity"
 msgstr "Activitat recent"
+
+#: packages/admin/src/components/Widgets.tsx:124
+msgid "Recent Posts"
+msgstr ""
 
 #: packages/admin/src/components/MarketplaceBrowse.tsx:43
 #: packages/admin/src/components/ThemeMarketplaceBrowse.tsx:35
@@ -6279,7 +6325,7 @@ msgstr "Mateixa finestra"
 #: packages/admin/src/components/Redirects.tsx:190
 #: packages/admin/src/components/SaveButton.tsx:32
 #: packages/admin/src/components/settings/BackupSettings.tsx:192
-#: packages/admin/src/components/Widgets.tsx:892
+#: packages/admin/src/components/Widgets.tsx:966
 #: packages/admin/src/routes/bylines.tsx:580
 msgid "Save"
 msgstr "Desa"
@@ -6347,7 +6393,7 @@ msgstr "S'ha desat «{0}»."
 #: packages/admin/src/components/settings/SocialSettings.tsx:147
 #: packages/admin/src/components/TaxonomyManager.tsx:476
 #: packages/admin/src/components/users/UserDetail.tsx:311
-#: packages/admin/src/components/Widgets.tsx:892
+#: packages/admin/src/components/Widgets.tsx:966
 #: packages/admin/src/routes/bylines.tsx:580
 msgid "Saving..."
 msgstr "S'està desant..."
@@ -6452,6 +6498,7 @@ msgid "SCSS"
 msgstr ""
 
 #: packages/admin/src/components/ContentTypeEditor.tsx:86
+#: packages/admin/src/components/Widgets.tsx:149
 msgid "Search"
 msgstr "Cerca"
 
@@ -6502,6 +6549,10 @@ msgstr "Optimització per a motors de cerca"
 #: packages/admin/src/components/Settings.tsx:83
 msgid "Search engine optimization and verification"
 msgstr "Optimització i verificació per a motors de cerca"
+
+#: packages/admin/src/components/Widgets.tsx:150
+msgid "Search form"
+msgstr ""
 
 #: packages/admin/src/components/MediaLibrary.tsx:416
 #: packages/admin/src/components/MediaPickerModal.tsx:578
@@ -6661,11 +6712,11 @@ msgstr "Selecciona {label}"
 msgid "Select {title}"
 msgstr ""
 
-#: packages/admin/src/components/Widgets.tsx:869
+#: packages/admin/src/components/Widgets.tsx:939
 msgid "Select a component..."
 msgstr "Selecciona un component..."
 
-#: packages/admin/src/components/Widgets.tsx:837
+#: packages/admin/src/components/Widgets.tsx:902
 msgid "Select a menu..."
 msgstr "Selecciona un menú..."
 
@@ -6885,6 +6936,26 @@ msgstr "Text curt"
 #: packages/admin/src/components/FieldEditor.tsx:579
 msgid "Short Text"
 msgstr "Text curt"
+
+#: packages/admin/src/components/Widgets.tsx:144
+msgid "Show count"
+msgstr ""
+
+#: packages/admin/src/components/Widgets.tsx:129
+msgid "Show date"
+msgstr ""
+
+#: packages/admin/src/components/Widgets.tsx:137
+msgid "Show hierarchy"
+msgstr ""
+
+#: packages/admin/src/components/Widgets.tsx:136
+msgid "Show post count"
+msgstr ""
+
+#: packages/admin/src/components/Widgets.tsx:128
+msgid "Show thumbnails"
+msgstr ""
 
 #: packages/admin/src/components/settings/ApiTokenSettings.tsx:210
 msgid "Show token"
@@ -7195,6 +7266,7 @@ msgid "Tagline"
 msgstr "Eslògan"
 
 #: packages/admin/src/components/AdminCommandPalette.tsx:202
+#: packages/admin/src/components/Widgets.tsx:141
 msgid "Tags"
 msgstr "Etiquetes"
 
@@ -7421,7 +7493,7 @@ msgstr "Aquesta secció s'ha importat d'un altre sistema."
 msgid "This update exposes the following routes without authentication:"
 msgstr "Aquesta actualització exposa les rutes següents sense autenticació:"
 
-#: packages/admin/src/components/Widgets.tsx:633
+#: packages/admin/src/components/Widgets.tsx:698
 msgid "This will delete the widget area and all its widgets. This action cannot be undone."
 msgstr "Això eliminarà l'àrea de ginys i tots els seus ginys. Aquesta acció no es pot desfer."
 
@@ -7471,7 +7543,7 @@ msgstr "Fus horari per mostrar les dates (p. ex. Europe/Madrid)"
 #: packages/admin/src/components/ContentList.tsx:643
 #: packages/admin/src/components/SectionEditor.tsx:238
 #: packages/admin/src/components/Sections.tsx:170
-#: packages/admin/src/components/Widgets.tsx:809
+#: packages/admin/src/components/Widgets.tsx:874
 msgid "Title"
 msgstr "Títol"
 
@@ -7768,8 +7840,8 @@ msgstr "Sense títol"
 msgid "Untitled file"
 msgstr "Fitxer sense títol"
 
-#: packages/admin/src/components/Widgets.tsx:466
-#: packages/admin/src/components/Widgets.tsx:727
+#: packages/admin/src/components/Widgets.tsx:531
+#: packages/admin/src/components/Widgets.tsx:792
 msgid "Untitled Widget"
 msgstr "Giny sense títol"
 
@@ -8230,39 +8302,39 @@ msgstr "Per què és important això?"
 msgid "Wide"
 msgstr "Ample"
 
-#: packages/admin/src/components/Widgets.tsx:720
-#: packages/admin/src/components/Widgets.tsx:735
+#: packages/admin/src/components/Widgets.tsx:785
+#: packages/admin/src/components/Widgets.tsx:800
 msgid "widget"
 msgstr "giny"
 
-#: packages/admin/src/components/Widgets.tsx:170
+#: packages/admin/src/components/Widgets.tsx:230
 msgid "Widget added"
 msgstr "S'ha afegit el giny"
 
-#: packages/admin/src/components/Widgets.tsx:158
+#: packages/admin/src/components/Widgets.tsx:218
 msgid "Widget area created"
 msgstr "S'ha creat l'àrea de ginys"
 
-#: packages/admin/src/components/Widgets.tsx:563
+#: packages/admin/src/components/Widgets.tsx:628
 msgid "Widget area deleted"
 msgstr "S'ha eliminat l'àrea de ginys"
 
-#: packages/admin/src/components/Widgets.tsx:683
+#: packages/admin/src/components/Widgets.tsx:748
 msgid "Widget deleted"
 msgstr "S'ha eliminat el giny"
 
-#: packages/admin/src/components/Widgets.tsx:812
+#: packages/admin/src/components/Widgets.tsx:877
 msgid "Widget title"
 msgstr "Títol del giny"
 
-#: packages/admin/src/components/Widgets.tsx:698
+#: packages/admin/src/components/Widgets.tsx:763
 msgid "Widget updated"
 msgstr "S'ha actualitzat el giny"
 
 #: packages/admin/src/components/AdminCommandPalette.tsx:169
 #: packages/admin/src/components/PluginManager.tsx:379
 #: packages/admin/src/components/Sidebar.tsx:333
-#: packages/admin/src/components/Widgets.tsx:325
+#: packages/admin/src/components/Widgets.tsx:385
 #: packages/admin/src/components/WordPressImport.tsx:1157
 msgid "Widgets"
 msgstr "Ginys"
@@ -8296,7 +8368,7 @@ msgstr "Nom d'usuari de WordPress"
 msgid "Working on {selectedCount} items…"
 msgstr ""
 
-#: packages/admin/src/components/Widgets.tsx:822
+#: packages/admin/src/components/Widgets.tsx:887
 msgid "Write widget content..."
 msgstr "Escriu el contingut del giny..."
 
@@ -8314,6 +8386,10 @@ msgstr ""
 
 #: packages/admin/src/components/editor/codeBlockLanguages.ts:59
 msgid "YAML"
+msgstr ""
+
+#: packages/admin/src/components/Widgets.tsx:161
+msgid "Yearly"
 msgstr ""
 
 #: packages/admin/src/components/users/UserDetail.tsx:236
