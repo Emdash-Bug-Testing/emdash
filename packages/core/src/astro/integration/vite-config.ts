@@ -245,6 +245,7 @@ export function createVirtualModulesPlugin(
 					entrypoint: resolvedConfig.database?.entrypoint,
 					type: resolvedConfig.database?.type,
 					supportsRequestScope: resolvedConfig.database?.supportsRequestScope ?? false,
+					supportsCoalescing: resolvedConfig.database?.supportsCoalescing ?? false,
 				});
 			}
 			// Generate a module that statically imports the configured storage
@@ -277,7 +278,11 @@ export function createVirtualModulesPlugin(
 			if (id === RESOLVED_VIRTUAL_SANDBOXED_PLUGINS_ID) {
 				// Pass project root for proper module resolution
 				const projectRoot = fileURLToPath(astroConfig.root);
-				return generateSandboxedPluginsModule(resolvedConfig.sandboxed ?? [], projectRoot);
+				return generateSandboxedPluginsModule(
+					resolvedConfig.sandboxed ?? [],
+					projectRoot,
+					(filePath) => this.addWatchFile(filePath),
+				);
 			}
 			// Generate auth module that statically imports the configured auth provider
 			if (id === RESOLVED_VIRTUAL_AUTH_ID) {
