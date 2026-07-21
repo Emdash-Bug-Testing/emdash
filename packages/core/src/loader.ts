@@ -14,7 +14,7 @@
 import type { LiveLoader } from "astro/loaders";
 import { Kysely, type RawBuilder, sql, type Dialect } from "kysely";
 
-import { currentTimestampValue, isPostgres } from "./database/dialect-helpers.js";
+import { buildStatusCondition, isPostgres } from "./database/dialect-helpers.js";
 import { kyselyLogOption } from "./database/instrumentation.js";
 import { decodeCursor, encodeCursor } from "./database/repositories/types.js";
 import { validateIdentifier } from "./database/validate.js";
@@ -116,12 +116,23 @@ function foldedHydrationSelects(db: Kysely<any>, type: string, outer: string) {
 	const agg = (inner: RawBuilder<unknown>) =>
 		pg ? sql`coalesce(json_agg(${inner}), '[]'::json)` : sql`json_group_array(${inner})`;
 
+	// Pin the join order for the per-entry hydration subqueries on SQLite (#1722).
+	// SQLite honours `CROSS JOIN` ordering, forcing the join to drive from the
+	// pivot (`content_taxonomies` / `_emdash_content_bylines`) by
+	// `(collection, entry_id)` and probe the term/byline table by
+	// `translation_group`. Without it, a stats-blind D1 planner (D1 never runs
+	// ANALYZE / maintains `sqlite_stat1`) is free to drive the correlated
+	// subquery from `taxonomies`/`_emdash_bylines` by `locale`, scanning every
+	// row in the locale per emitted entry. Postgres keeps statistics and rejects
+	// `CROSS JOIN … ON`, so it stays a plain `JOIN` there.
+	const foldJoin = pg ? sql`JOIN` : sql`CROSS JOIN`;
+
 	const termObj = obj(
 		"'id', t.id, 'name', t.name, 'slug', t.slug, 'label', t.label, 'parent_id', t.parent_id, 'locale', t.locale, 'translation_group', t.translation_group",
 	);
 	// Filter terms to the entry's own locale (matches #1441: terms render in the
 	// entry's resolved locale, not all locale variants of the attached group).
-	const terms = sql`(SELECT ${agg(termObj)} FROM ${sql.ref("content_taxonomies")} AS ct JOIN ${sql.ref("taxonomies")} AS t ON t.translation_group = ct.taxonomy_id WHERE ct.collection = ${type} AND ct.entry_id = ${o}.id AND t.locale = ${o}.locale) AS ${sql.ref("_emdash_terms")}`;
+	const terms = sql`(SELECT ${agg(termObj)} FROM ${sql.ref("content_taxonomies")} AS ct ${foldJoin} ${sql.ref("taxonomies")} AS t ON t.translation_group = ct.taxonomy_id WHERE ct.collection = ${type} AND ct.entry_id = ${o}.id AND t.locale = ${o}.locale) AS ${sql.ref("_emdash_terms")}`;
 
 	const bylineInner = obj(
 		"'id', b.id, 'slug', b.slug, 'displayName', b.display_name, 'bio', b.bio, 'avatarMediaId', b.avatar_media_id, 'avatarStorageKey', m.storage_key, 'avatarAlt', m.alt, 'avatarBlurhash', m.blurhash, 'avatarDominantColor', m.dominant_color, 'websiteUrl', b.website_url, 'userId', b.user_id, 'isGuest', b.is_guest, 'createdAt', b.created_at, 'updatedAt', b.updated_at, 'locale', b.locale, 'translationGroup', b.translation_group",
@@ -132,7 +143,7 @@ function foldedHydrationSelects(db: Kysely<any>, type: string, outer: string) {
 			)
 		: sql.raw("json_object('roleLabel', cb.role_label, 'sortOrder', cb.sort_order, 'byline', ");
 	const credit = sql`${creditObj}${bylineInner})`;
-	const bylines = sql`(SELECT ${agg(credit)} FROM ${sql.ref("_emdash_content_bylines")} AS cb JOIN ${sql.ref("_emdash_bylines")} AS b ON b.translation_group = cb.byline_id LEFT JOIN ${sql.ref("media")} AS m ON m.id = b.avatar_media_id WHERE cb.collection_slug = ${type} AND cb.content_id = ${o}.id AND b.locale = ${o}.locale) AS ${sql.ref("_emdash_bylines")}`;
+	const bylines = sql`(SELECT ${agg(credit)} FROM ${sql.ref("_emdash_content_bylines")} AS cb ${foldJoin} ${sql.ref("_emdash_bylines")} AS b ON b.translation_group = cb.byline_id LEFT JOIN ${sql.ref("media")} AS m ON m.id = b.avatar_media_id WHERE cb.collection_slug = ${type} AND cb.content_id = ${o}.id AND b.locale = ${o}.locale) AS ${sql.ref("_emdash_bylines")}`;
 	return { terms, bylines };
 }
 
@@ -505,36 +516,6 @@ export type SortDirection = "asc" | "desc";
 export type OrderBySpec = Record<string, SortDirection>;
 
 /**
- * Build WHERE clause for status filtering.
- * When filtering for 'published' status, also include scheduled content
- * whose scheduled_at time has passed (treating it as effectively published).
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- accepts any Kysely instance
-function buildStatusCondition(
-	db: Kysely<any>,
-	status: string,
-	tablePrefix?: string,
-): ReturnType<typeof sql> {
-	const statusField = tablePrefix ? `${tablePrefix}.status` : "status";
-	const scheduledAtField = tablePrefix ? `${tablePrefix}.scheduled_at` : "scheduled_at";
-
-	if (status === "published") {
-		// Include both published content AND scheduled content past its publish time.
-		// scheduled_at is stored as text (ISO 8601). On Postgres, we must cast it
-		// to timestamptz for the comparison with CURRENT_TIMESTAMP to work.
-		const scheduledAtExpr = isPostgres(db)
-			? sql`${sql.ref(scheduledAtField)}::timestamptz`
-			: sql.ref(scheduledAtField);
-		const nowExpr = isPostgres(db)
-			? currentTimestampValue(db)
-			: sql`strftime('%Y-%m-%dT%H:%M:%fZ', 'now')`;
-		return sql`(${sql.ref(statusField)} = 'published' OR (${sql.ref(statusField)} = 'scheduled' AND ${scheduledAtExpr} <= ${nowExpr}))`;
-	}
-
-	return sql`${sql.ref(statusField)} = ${status}`;
-}
-
-/**
  * Resolved primary sort field and direction (used for cursor pagination).
  */
 interface PrimarySort {
@@ -663,6 +644,263 @@ function buildFieldConditions(
 	}
 
 	return conditions;
+}
+
+/**
+ * Resolve a taxonomy filter (`name` + one or more `slug`s, optionally scoped to
+ * `locale`) to the set of `translation_group`s the pivot stores in
+ * `content_taxonomies.taxonomy_id`. Exact terms only — no subtree expansion.
+ *
+ * Mirrors the meaning of the old EXISTS join (`t.name = ? AND t.slug IN (?)
+ * [AND t.locale = ?]`): a pivot row matches when its group has a term with that
+ * name/slug in the active locale. Resolving to explicit values (rather than an
+ * `IN (subquery)`) keeps the single-term case a plain equality on the pivot
+ * index, which is what gives the clean early-`LIMIT` seek.
+ */
+async function resolveTermGroups(
+	db: Kysely<Database>,
+	name: string,
+	slugs: string[],
+	locale: string | undefined,
+): Promise<string[]> {
+	let query = db
+		.selectFrom("taxonomies")
+		.select("translation_group")
+		.distinct()
+		.where("name", "=", name)
+		.where("slug", "in", slugs);
+	if (locale) query = query.where("locale", "=", locale);
+	const rows = await query.execute();
+	const groups = new Set<string>();
+	for (const row of rows) {
+		if (row.translation_group) groups.add(row.translation_group);
+	}
+	return [...groups];
+}
+
+/** Equality (single) or `IN` (multiple) condition on a pivot group column. */
+function pivotGroupCondition(ref: string, groups: string[]): ReturnType<typeof sql> {
+	if (groups.length === 1) return sql`${sql.ref(ref)} = ${groups[0]}`;
+	return sql`${sql.ref(ref)} IN (${sql.join(groups.map((g) => sql`${g}`))})`;
+}
+
+/** LIMIT/OFFSET fragment matching the loader's single-table variant. */
+function buildPivotLimitOffset(
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- any Kysely instance
+	db: Kysely<any>,
+	fetchLimit: number | undefined,
+	offset: number | undefined,
+): ReturnType<typeof sql> {
+	if (fetchLimit != null && offset != null) return sql`LIMIT ${fetchLimit} OFFSET ${offset}`;
+	if (fetchLimit != null) return sql`LIMIT ${fetchLimit}`;
+	if (offset != null) {
+		return isPostgres(db) ? sql`OFFSET ${offset}` : sql`LIMIT -1 OFFSET ${offset}`;
+	}
+	return sql``;
+}
+
+/**
+ * Options for {@link buildTaxonomyPivotQuery}.
+ *
+ * Parameterized on the `deletedIsNull` predicate and `status` condition so the
+ * same builder serves the public live path (`deleted_at IS NULL` + published/
+ * scheduled) and, without any schema change, an admin trash (`deleted_at IS NOT
+ * NULL`) or all-statuses shape. Admin wiring is out of scope today; the
+ * parameters exist so `ContentRepository` can adopt this if it gains taxonomy
+ * filtering.
+ */
+export interface TaxonomyPivotQueryOptions {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any -- any Kysely instance
+	db: Kysely<any>;
+	/** Collection slug (pivot `collection` value). */
+	collection: string;
+	/** Content table name (`ec_<collection>`). */
+	tableName: string;
+	/**
+	 * Resolved translation_group sets, one per taxonomy filter. The first drives
+	 * the pivot seek; each additional set becomes a residual `EXISTS` (AND across
+	 * taxonomies). Multiple groups within a set are OR'd (dedup via GROUP BY).
+	 */
+	groupSets: string[][];
+	orderBy: OrderBySpec | undefined;
+	cursor: string | undefined;
+	locale: string | undefined;
+	/**
+	 * Status shape. A concrete value (`published`/`draft`/…) applies the same
+	 * condition `buildStatusCondition` produces (public: published-or-scheduled).
+	 * `undefined` drops the status filter entirely — the admin all-statuses shape.
+	 */
+	status: string | undefined;
+	/** `true` → `deleted_at IS NULL` (live); `false` → `IS NOT NULL` (trash). */
+	deletedIsNull: boolean;
+	/** Byline translation_groups for an AND'd byline filter, or `null`. */
+	bylineGroups: string[] | null;
+	fetchLimit: number | undefined;
+	offset: number | undefined;
+}
+
+/**
+ * Build the pivot-driven taxonomy listing query (#1834).
+ *
+ * Drives from a pivot-only CTE (`picked`) that carries the sort column, seeks
+ * the term on a `(taxonomy_id, collection, deleted_at, [locale,] <sort> DESC,
+ * entry_id DESC)` index, and lets `LIMIT` short-circuit; then joins `ec_*` by primary
+ * key to hydrate the page **and re-checks the real filter predicates on the
+ * joined row** — the pivot columns are advisory (non-atomic re-stamp on D1), so
+ * `ec_*` is authoritative for membership. Ordering stays pivot-driven to keep
+ * the early-`LIMIT`.
+ *
+ * Two shapes:
+ * - **Indexed sort** (`published_at`/`created_at`, single sort field): the
+ *   pivot index is covering for `(entry_id, sortval)`, so `LIMIT` lives in
+ *   `picked` and short-circuits.
+ * - **Temp-sort** (`updated_at` or any other field, or multi-field sort): no
+ *   pivot sort index applies, so `picked` collects the tagged candidate set and
+ *   the outer query sorts the joined rows. Bounded to tagged rows — no
+ *   `ec_*` full scan — but no early-`LIMIT`.
+ */
+export function buildTaxonomyPivotQuery(
+	opts: TaxonomyPivotQueryOptions,
+): ReturnType<typeof sql<Record<string, unknown>>> {
+	const {
+		db,
+		collection,
+		tableName,
+		groupSets,
+		orderBy,
+		cursor,
+		locale,
+		status,
+		deletedIsNull,
+		bylineGroups,
+		fetchLimit,
+		offset,
+	} = opts;
+
+	const primary = getPrimarySort(orderBy);
+	const validSortKeys = orderBy
+		? Object.keys(orderBy).filter((k) => FIELD_NAME_PATTERN.test(k))
+		: [];
+	const singleSort = validSortKeys.length <= 1;
+	const isIndexedSort =
+		singleSort && (primary.field === "published_at" || primary.field === "created_at");
+	const dir = primary.direction === "asc" ? sql`ASC` : sql`DESC`;
+	const cmp = primary.direction === "asc" ? sql.raw(">") : sql.raw("<");
+
+	const firstGroups = groupSets[0] ?? [];
+	const restGroups = groupSets.slice(1);
+	const multiGroup = firstGroups.length > 1;
+
+	// Pivot-local narrowing predicates (advisory — re-checked on `ec_*` below).
+	// `status === undefined` means an all-statuses shape (admin), so the status
+	// condition is dropped entirely.
+	const deletedCt = deletedIsNull ? sql`ct.deleted_at IS NULL` : sql`ct.deleted_at IS NOT NULL`;
+	const statusCt =
+		status !== undefined ? sql`AND ${buildStatusCondition(db, status, "ct")}` : sql``;
+	const localeCt = locale ? sql`AND ct.locale = ${locale}` : sql``;
+
+	// Multi-term AND: one residual pivot-PK EXISTS per additional taxonomy.
+	const residual =
+		restGroups.length > 0
+			? sql`${sql.join(
+					restGroups.map(
+						(g) => sql`AND EXISTS (
+						SELECT 1 FROM content_taxonomies ct2
+						WHERE ct2.collection = ${collection}
+							AND ct2.entry_id = ct.entry_id
+							AND ${pivotGroupCondition("ct2.taxonomy_id", g)}
+					)`,
+					),
+					sql` `,
+				)}`
+			: sql``;
+
+	// Byline filter keeps its EXISTS, correlated on `ct.entry_id`.
+	const bylineCt = bylineGroups
+		? sql`AND EXISTS (
+				SELECT 1 FROM _emdash_content_bylines cb
+				WHERE cb.collection_slug = ${collection}
+					AND cb.content_id = ct.entry_id
+					AND cb.byline_id IN (${sql.join(bylineGroups.map((g) => sql`${g}`))})
+			)`
+		: sql``;
+
+	const firstGroupCond = pivotGroupCondition("ct.taxonomy_id", firstGroups);
+	const { terms: termsSelect, bylines: bylinesSelect } = foldedHydrationSelects(
+		db,
+		collection,
+		"r",
+	);
+
+	// Authoritative re-check on the joined `ec_*` row.
+	const deletedR = deletedIsNull ? sql`r.deleted_at IS NULL` : sql`r.deleted_at IS NOT NULL`;
+	const statusR = status !== undefined ? sql`AND ${buildStatusCondition(db, status, "r")}` : sql``;
+	const localeR = locale ? sql`AND r.locale = ${locale}` : sql``;
+
+	if (isIndexedSort) {
+		const sortRef = sql.ref(`ct.${primary.field}`);
+		const sortval = multiGroup ? sql`MAX(${sortRef})` : sortRef;
+		const groupByClause = multiGroup ? sql`GROUP BY ct.entry_id` : sql``;
+
+		let cursorClause = sql``;
+		let havingClause = sql``;
+		if (cursor) {
+			const { orderValue, id } = decodeCursor(cursor);
+			const cond = sql`(${sortval} ${cmp} ${orderValue} OR (${sortval} = ${orderValue} AND ct.entry_id ${cmp} ${id}))`;
+			// A GROUP BY makes `sortval` an aggregate → cursor goes in HAVING.
+			if (multiGroup) havingClause = sql`HAVING ${cond}`;
+			else cursorClause = sql`AND ${cond}`;
+		}
+
+		const limitClause = buildPivotLimitOffset(db, fetchLimit, offset);
+
+		return sql<Record<string, unknown>>`
+			WITH picked AS (
+				SELECT ct.entry_id AS entry_id, ${sortval} AS sortval
+				FROM content_taxonomies ct
+				WHERE ct.collection = ${collection}
+					AND ${firstGroupCond}
+					AND ${deletedCt}
+					${statusCt}
+					${localeCt}
+					${residual}
+					${bylineCt}
+					${cursorClause}
+				${groupByClause}
+				${havingClause}
+				ORDER BY sortval ${dir}, ct.entry_id ${dir}
+				${limitClause}
+			)
+			SELECT r.*, ${termsSelect}, ${bylinesSelect}
+			FROM picked JOIN ${sql.ref(tableName)} AS r ON r.id = picked.entry_id
+			WHERE ${deletedR} ${statusR} ${localeR}
+			ORDER BY picked.sortval ${dir}, picked.entry_id ${dir}
+		`;
+	}
+
+	// Temp-sort path: seek the term via the pivot, sort the joined candidate set.
+	const orderByClause = buildOrderByClause(orderBy, "r");
+	const cursorCond = cursor ? sql`AND ${buildCursorCondition(cursor, orderBy, "r")}` : sql``;
+	const limitClause = buildPivotLimitOffset(db, fetchLimit, offset);
+	return sql<Record<string, unknown>>`
+		WITH picked AS (
+			SELECT DISTINCT ct.entry_id AS entry_id
+			FROM content_taxonomies ct
+			WHERE ct.collection = ${collection}
+				AND ${firstGroupCond}
+				AND ${deletedCt}
+				${statusCt}
+				${localeCt}
+				${residual}
+				${bylineCt}
+		)
+		SELECT r.*, ${termsSelect}, ${bylinesSelect}
+		FROM picked JOIN ${sql.ref(tableName)} AS r ON r.id = picked.entry_id
+		WHERE ${deletedR} ${statusR} ${localeR}
+			${cursorCond}
+		${orderByClause}
+		${limitClause}
+	`;
 }
 
 /**
@@ -931,7 +1169,41 @@ export function emdashLoader(): LiveLoader<EntryData, EntryFilter, CollectionFil
 					return { entries: [], cacheHint: { tags: [type] } };
 				}
 
-				{
+				if (taxonomyFilters.length > 0 && Object.keys(fieldFilters).length === 0) {
+					// Pivot-drive fast path (#1834): seek the matching entries on the
+					// denormalized `content_taxonomies` pivot instead of scanning the
+					// whole collection and probing a taxonomy EXISTS per row. Only the
+					// taxonomy path is restructured — a taxonomy filter combined with a
+					// content-field filter falls through to the single-table shape
+					// below (field predicates live on `ec_*`, not the pivot). A byline
+					// filter rides along inside the pivot CTE (see the builder).
+					const groupSets: string[][] = [];
+					for (const taxFilter of taxonomyFilters) {
+						const groups = await resolveTermGroups(db, taxFilter.name, taxFilter.slugs, locale);
+						// A slug that resolves to no term matches nothing; since taxonomy
+						// filters AND together, one empty set empties the whole result.
+						if (groups.length === 0) {
+							return { entries: [], cacheHint: { tags: [type] } };
+						}
+						groupSets.push(groups);
+					}
+
+					result = await buildTaxonomyPivotQuery({
+						db,
+						collection: type,
+						tableName,
+						groupSets,
+						orderBy,
+						cursor,
+						locale,
+						status,
+						// Public listings only ever want live content.
+						deletedIsNull: true,
+						bylineGroups: bylineFilter ? bylineFilter.groups : null,
+						fetchLimit,
+						offset,
+					}).execute(db);
+				} else {
 					// Taxonomy and byline filters are applied as correlated
 					// `EXISTS` semi-joins rather than `INNER JOIN ... DISTINCT`.
 					// A join fan-out would force `SELECT DISTINCT table.*`, and
