@@ -38,7 +38,7 @@
 		"@emdash-cms/blocks": "workspace:*"
 	},
 	"devDependencies": {
-		"vitest": "catalog:"
+		"vitest": "^4.1.9"
 	},
 	"scripts": {
 		"test": "vitest run",
