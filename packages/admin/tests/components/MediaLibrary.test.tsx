@@ -127,15 +127,15 @@ describe("MediaLibrary", () => {
 		it("provider grid thumbnails are natively lazy-loaded", async () => {
 			mockProvider([makeProviderItem()]);
 			const screen = await renderLibrary();
-			await screen.getByRole("button", { name: "Acme Provider" }).click();
+			await screen.getByRole("tab", { name: "Acme Provider" }).click();
 			await expect.element(screen.getByAltText("cloud-pic.jpg")).toHaveAttribute("loading", "lazy");
 		});
 
 		it("provider list thumbnails are natively lazy-loaded", async () => {
 			mockProvider([makeProviderItem()]);
 			const screen = await renderLibrary();
-			await screen.getByRole("button", { name: "Acme Provider" }).click();
-			await screen.getByRole("button", { name: "List view" }).click();
+			await screen.getByRole("tab", { name: "Acme Provider" }).click();
+			await screen.getByRole("tab", { name: "List view" }).click();
 			await expect.element(screen.getByAltText("cloud-pic.jpg")).toHaveAttribute("loading", "lazy");
 		});
 	});
@@ -320,7 +320,7 @@ describe("MediaLibrary", () => {
 		it("list view thumbnails are natively lazy-loaded", async () => {
 			const items = [makeMediaItem({ id: "1", filename: "pic.jpg", mimeType: "image/jpeg" })];
 			const screen = await renderLibrary({ items });
-			await screen.getByRole("button", { name: "List view" }).click();
+			await screen.getByRole("tab", { name: "List view" }).click();
 			await expect.element(screen.getByAltText("pic.jpg")).toHaveAttribute("loading", "lazy");
 		});
 	});
