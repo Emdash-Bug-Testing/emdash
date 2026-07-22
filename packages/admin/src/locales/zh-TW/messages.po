@@ -2896,7 +2896,10 @@ msgid ""
 "Editor\n"
 "Reporter\n"
 "Photographer"
-msgstr "編輯者\n記者\n攝影師"
+msgstr ""
+"編輯者\n"
+"記者\n"
+"攝影師"
 
 #: packages/admin/src/components/WordPressImport.tsx:1044
 msgid "em1.…"
@@ -5602,7 +5605,10 @@ msgid ""
 "Option 1\n"
 "Option 2\n"
 "Option 3"
-msgstr "選項 1\n選項 2\n選項 3"
+msgstr ""
+"選項 1\n"
+"選項 2\n"
+"選項 3"
 
 #: packages/admin/src/components/editor/GalleryDetailPanel.tsx:385
 msgid "Optional caption"
